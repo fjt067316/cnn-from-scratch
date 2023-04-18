@@ -5,7 +5,15 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
-#include "classes.h"
+#include <random>
+#include "classes/conv.h"
+#include "classes/softmax.h"
+#include "classes/fcl.h"
+#include "classes/pool.h"
+#include "classes/utils.h"
+#include "classes/zeros.h"
+#include "classes/batch_norm.h"
+#include "classes/activation_functions.h"
 using namespace std;
 
 int working();
@@ -17,24 +25,6 @@ void threadFunction(int threadId) {
     std::cout << "Thread " << threadId << " is running" << std::endl;
 }
 
-vector<double> flatten(vector<vector<vector<double>>> feature_map) {
-    int num_filters = feature_map.size();
-    int rows = feature_map[0].size();
-    int cols = feature_map[0][0].size();
-
-    vector<double> flat(num_filters * rows * cols);
-
-    int idx = 0;
-    for (int f = 0; f < num_filters; f++) {
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                flat[idx++] = feature_map[f][r][c];
-            }
-        }
-    }
-
-    return flat;
-}
 
 vector<double> decodeCsvString(string csv){
     std::vector<double> values;
@@ -49,21 +39,6 @@ vector<double> decodeCsvString(string csv){
     //     std::cout << value << " ";
     // }
     return values;
-}
-
-vector<vector<vector<double>>> reshape_input(vector<double> input_1d, int rows, int cols){
-    
-    vector<vector<vector<double>>> output(1, vector<vector<double>>(rows, vector<double>(cols, 0))); // fill matrix with 0's
-    int counter = 0;
-
-    for(int i=0; i<rows; i++){
-        for(int j=0; j<cols; j++){
-            output[0][i][j] = input_1d[counter];
-            counter++;
-        }
-    }
-
-    return output;
 }
 
 int main(){
@@ -95,7 +70,7 @@ int simple() {
     }
     string row;
     getline(inputFile, row); // discard first header row
-    double learning_rate = 0.01; //LinearLRScheduler(0.2, -0.000005)
+    double learning_rate = 0.001; //LinearLRScheduler(0.2, -0.000005)
     int n = 10000; // number of rows to read
     int num_correct = 0;
     int loss = 0;
@@ -105,13 +80,13 @@ int simple() {
         getline(inputFile, row);
         vector<double> input = decodeCsvString(row); // input = (784)
 
-        if(i%1000 == 0){ // learning scheduler
-            if(learning_rate < 0.00001){
-                continue;
-            }
-            // learning_rate *= 0.95;
-            learning_rate += -0.0005;
-        }
+        // if(i%1000 == 0){ // learning scheduler
+        //     if(learning_rate < 0.00001){
+        //         continue;
+        //     }
+        //     learning_rate *= 0.95;
+        //     // learning_rate += -0.00005;
+        // }
 
         int image_label = input.front(); // correct image value
         input.erase(input.begin());
