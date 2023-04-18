@@ -256,6 +256,125 @@ public:
 };
 
 
+class AdamConv{
+public:
+    vector<vector<vector<vector<double>>>>  m_dw, v_dw; // one for every weight in layer
+    vector<double> m_db, v_db; // one for every bias in layer
+    double beta1, beta2, epsilon, learning_rate, initial_b1, initial_b2;
+    int t = 0;
+    int counter=0;
+    int iterations = 100;
+    double decay_rate = 0.8;
+    double gamma_init = 0.00001;
+    int filter_depth, filter_size, num_filters;
+
+    AdamConv(int num_filters, int filter_depth, int filter_size, double learning_rate=0.0005, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
+    m_dw(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0)))),
+    v_dw(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0)))),
+    m_db(num_filters, 0),
+    v_db(num_filters, 0)
+    {
+       
+        this->beta1 = beta1;
+        // this->initial_b1 = beta1;
+        // this->initial_b2 = beta2;
+        this->beta2 = beta2;
+        this->epsilon = epsilon;
+        this->learning_rate = learning_rate;
+        this->filter_depth = filter_depth;
+        this->num_filters = num_filters;
+        this->filter_size = filter_size;
+    }
+
+    void update( vector<vector<vector<vector<double>>>> *w, vector<double> *b, vector<vector<vector<vector<double>>>> dw, vector<double> db) { // t is current timestep
+        // dw, db are what we would usually update params with gradient descent
+        // printArray(m_dw[0], 10);
+        // printArray(dw[0], 10);
+        // counter++;
+        // if((counter % iterations) == 0){
+        //     // beta1 *= initial_b1;
+        //     // beta2 *= initial_b2;
+        // }
+        this->t++;
+
+        // momentum beta 1
+        // weights
+        for(int n=0; n < num_filters; n++){
+            for(int d=0; d < filter_depth; d++){
+                for(int j=0; j < filter_size; j++){
+                    for(int k=0; k < filter_size; k++){
+                        m_dw[n][d][j][k] = beta1 * m_dw[n][d][j][k] + (1 - beta1) * dw[n][d][j][k]; // biased momentum estimate
+                        v_dw[n][d][j][k] = beta2 * v_dw[n][d][j][k] + (1 - beta2) * pow(dw[n][d][j][k], 2); // bias corrected momentum estimate     
+                    }
+                }
+            }
+        }
+        // printArray(m_dw[0], 10);
+
+        // cout << m_dw[7][7] << endl;
+        // print_vector(m_dw);
+        // biases
+        for(int i=0; i< (*w).size(); i++){
+            m_db[i] = beta1 * m_db[i] + (1 - beta1) * db[i]; 
+            v_db[i] = beta2 * v_db[i] + (1 - beta2) * pow(db[i], 2);
+        }
+        
+
+        // rms beta 2
+        // weights
+        // biases
+        vector<vector<vector<vector<double>>>> m_dw_corr(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0))));
+        vector<vector<vector<vector<double>>>> v_dw_corr(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0))));
+        vector<double> m_db_corr(m_dw.size());
+        vector<double> v_db_corr(m_dw.size());
+
+        double denom_mw = (1 - pow(beta1, t));
+        double denom_vw = (1 - pow(beta2, t));
+        // cout << denom_mw << endl;
+        for(int n=0; n < num_filters; n++){
+            for(int d=0; d < filter_depth; d++){
+                for(int j=0; j < filter_size; j++){
+                    for(int k=0; k < filter_size; k++){
+                        m_dw_corr[n][d][j][k] = m_dw[n][d][j][k] / denom_mw; // biased momentum estimate
+                        v_dw_corr[n][d][j][k] = v_dw[n][d][j][k] / denom_vw; // bias corrected momentum estimate     
+                    }
+                }
+            }
+        }
+
+        // bias correction
+        double denom_mb = (1 - pow(beta1, t));
+        double denom_vb = (1 - pow(beta2, t));
+
+        for (int j = 0; j < m_dw.size(); j++) {
+            m_db_corr[j] = m_db[j] / denom_mb;
+            v_db_corr[j] = v_db[j] / denom_vb;
+        }
+
+        // printArray(m_dw_corr[0], 10);
+        // update weights and biases 
+        // double gamma = gamma_init * decay_rate;
+        for(int n=0; n < num_filters; n++){
+            for(int d=0; d < filter_depth; d++){
+                for(int j=0; j < filter_size; j++){
+                    for(int k=0; k < filter_size; k++){
+                        (*w)[n][d][j][k] -= learning_rate * (m_dw_corr[n][d][j][k] / (sqrt(v_dw_corr[n][d][j][k]) + epsilon));  
+                    }
+                }
+            }
+        }
+        // printArray(m_db_corr, 10);
+        // learning_rate = learning_rate * sqrt(denom_vb) / denom_mb;
+
+        // b -= learning_rate *  dL/dZ
+        for(int i=0; i < (*b).size(); i++){
+            (*b)[i] -=learning_rate * (m_db_corr[i] / (sqrt(v_db_corr[i]) + epsilon)); 
+        }
+        
+        return;
+    }
+};
+
 class Softmax {
 public:
 vector<double> last_input;
@@ -412,13 +531,18 @@ public:
     vector<vector<vector<double>>> _input;
     vector<vector<vector<double>>> _output;
     int input_depth;
+    AdamConv adam;
+
     // vector<vector<vector<double>>> bias; // bias is added to 3d result after apply every filter
     vector<double> bias; // dB is calcaulted by averaging dLdZ
-    ConvolutionLayer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0) {
+    ConvolutionLayer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0) :
+            adam(num_filters, input_depth, filter_len)
+     {
         this->num_filters = num_filters;
         this->filter_len = filter_len;
         this->stride = stride;
         this->padding = padding;
+
 
         // filters is shape (feature_map_num x input_3d_depth x filter_height x filter_width)
         this->filters.resize(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
@@ -550,20 +674,23 @@ public:
             dLdB[i] /= dLdZ[0].size() * dLdZ[0][0].size(); // average it
         }
 
+
+        adam.update(&filters, &bias, dLdW, dLdB);
         
             // Apply dLdW to feature maps
             // print_vector(dLdW[1]);
             // print_vector(filters[1]);
-        for(int filter_num=0; filter_num < num_filters; filter_num++){
-            for(int d=0; d < _input.size(); d++){
-                for(int r=0; r<filter_len; r++){
-                    for(int c=0; c<filter_len; c++){
-                        filters[filter_num][d][r][c] -= learning_rate * dLdW[filter_num][d][r][c];
-                    }
-                }
-            }
-            bias[filter_num] -= learning_rate * dLdB[filter_num];
-        }
+
+        // for(int filter_num=0; filter_num < num_filters; filter_num++){
+        //     for(int d=0; d < _input.size(); d++){
+        //         for(int r=0; r<filter_len; r++){
+        //             for(int c=0; c<filter_len; c++){
+        //                 filters[filter_num][d][r][c] -= learning_rate * dLdW[filter_num][d][r][c];
+        //             }
+        //         }
+        //     }
+        //     bias[filter_num] -= learning_rate * dLdB[filter_num];
+        // }
         return dLdZ_next;
     }
 };
