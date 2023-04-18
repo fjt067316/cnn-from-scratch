@@ -302,7 +302,9 @@ public:
     AdamConv adam;
 
     // vector<vector<vector<double>>> bias; // bias is added to 3d result after apply every filter
+    
     vector<double> bias; // dB is calcaulted by averaging dLdZ
+
     ConvolutionLayer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0) :
             adam(num_filters, input_depth, filter_len)
      {
