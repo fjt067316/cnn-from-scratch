@@ -14,6 +14,7 @@ using namespace std;
 
 
 class AdamConv{
+    // https://datascience.stackexchange.com/questions/25024/strange-behavior-with-adam-optimizer-when-training-for-too-long
 public:
     vector<vector<vector<vector<double>>>>  m_dw, v_dw; // one for every weight in layer
     vector<double> m_db, v_db; // one for every bias in layer
@@ -46,13 +47,14 @@ public:
     void update( vector<vector<vector<vector<double>>>> *w, vector<double> *b, vector<vector<vector<vector<double>>>> dw, vector<double> db) { // t is current timestep
         // dw, db are what we would usually update params with gradient descent
         // printArray(m_dw[0], 10);
-        // printArray(dw[0], 10);
+        // printArray(dw[0][0][0], 10);
         // counter++;
         // if((counter % iterations) == 0){
         //     // beta1 *= initial_b1;
         //     // beta2 *= initial_b2;
         // }
         this->t++;
+
 
         // momentum beta 1
         // weights

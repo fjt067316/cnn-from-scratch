@@ -11,6 +11,7 @@
 #include "classes/zeros.h"
 #include "classes/batch_norm.h"
 #include "classes/activation_functions.h"
+#include "classes/tensor.h"
 using namespace std;
 
 // generic type for layers so we dont have to use void* 
@@ -19,15 +20,19 @@ using namespace std;
 class Model{
     public:
     vector<Layer*> model;
+    double learning_rate;
 
-    Model() {
+    Model(double learning_rate) {
+        this->learning_rate = learning_rate;
         return;
     }
 
     void train(vector<vector<vector<double>>> image_input, int iterations, int learning_rate){
-        
+        Tensor<double> *x = new Tensor(1,28,28);
+        Layer layer ;
         for (int i = 0; i < model.size(); ++i) {
-            Layer layer = *model[i];
+            layer = *model[i];
+            x = layer->forward(x);
 
          }
     }

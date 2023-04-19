@@ -14,7 +14,7 @@
 #include "classes/zeros.h"
 #include "classes/batch_norm.h"
 #include "classes/activation_functions.h"
-#include "model.h"
+// #include "model.h"
 using namespace std;
 
 int working();
@@ -43,10 +43,10 @@ vector<double> decodeCsvString(string csv){
 }
 
 int main(){
-    // custom();
-    Model* model = new Model();
-    model->add_conv_layer(8, 1, 3);
-    model->add_max_pool(2,2);
+    working();
+    // Model* model = new Model();
+    // model->add_conv_layer(8, 1, 3);
+    // model->add_max_pool(2,2);
     
     return 1;
 }

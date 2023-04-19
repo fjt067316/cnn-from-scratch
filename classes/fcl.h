@@ -16,8 +16,10 @@ public:
     int t = 0;
     int counter=0;
     int iterations = 100;
-    double decay_rate = 0.8;
-    double gamma_init = 0.00001;
+    // double decay_rate = 0.8;
+    // double gamma_init = 0.00001;
+    // double clip_norm = 1;
+
 
     AdamFCL(double rows, double cols, double learning_rate=0.00001, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
     m_dw(rows, vector<double>(cols, 0)),
