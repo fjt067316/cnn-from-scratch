@@ -16,12 +16,14 @@ public:
     vector<double> inputs;
     double epsilon;
     double variance;
+    double learning_rate;
 
-    BatchNorm1D( double epsilon = 1e-5){
+    BatchNorm1D( double learning_rate=0.001, double epsilon = 1e-5){
         // Initialize gamma and beta as 1 and 0 to start
         this->gamma = 1;
         this->beta = 0;
         this->epsilon = epsilon;
+        this->learning_rate = learning_rate;
         // random_device rd;
         // mt19937 gen(rd());
         // uniform_real_distribution<double> dis(-1.0, 1.0);
@@ -65,7 +67,7 @@ public:
 
     }
 
-    vector<double> backwards(vector<double> dLdZ, double learning_rate){
+    vector<double> backwards(vector<double> dLdZ){
         // https://deepnotes.io/batchnorm#backward-propagation
         vector<double> dLdA(dLdZ.size(), 0.0); //= dLdZ * gamma / sqrt(variance+epsilon); // epsilon added to avoid division by zero
         double dLdG = 0;
@@ -98,8 +100,9 @@ public:
     double epsilon;
     vector<double> variance;
     int num_channels;
+    double learning_rate;
 
-    BatchNorm3D(int num_channels, double epsilon = 1e-5){
+    BatchNorm3D(int num_channels, double learning_rate=0.001, double epsilon = 1e-5){
         // 1 gamma and 1 beta per channel
         // Initialize gamma and beta as 1 and 0 to start
         this->gamma = vector<double>(num_channels, 1);
@@ -107,9 +110,10 @@ public:
         this->variance = vector<double>(num_channels, 0);
         this->num_channels = num_channels;
         this->epsilon = epsilon;
+        this->learning_rate = learning_rate;
     }
 
-    void batch_normalize(vector<vector<vector<double>>> *input) { // epsilon helps prevent division by 0
+    void forwards(vector<vector<vector<double>>> *input) { // epsilon helps prevent division by 0
         int channel_rows = (*input)[0].size();
         int channel_cols = (*input)[0][0].size();
 
@@ -159,7 +163,7 @@ public:
 
     }
 
-    void backwards(vector<vector<vector<double>>> *dLdZ, double learning_rate){
+    void backwards(vector<vector<vector<double>>> *dLdZ){
         // https://deepnotes.io/batchnorm#backward-propagation
         // vector<vector<vector<double>>> dLdA(dLdZ.size(), vector<vector<double>>(dLdZ[0].size(), vector<double>(dLdZ[0][0].size(), 0.0)));
         vector<double> dLdG((*dLdZ).size(), 0.0);

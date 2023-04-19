@@ -37,14 +37,14 @@ class Model{
          }
     }
 
-    void add_conv_layer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0){
-        ConvolutionLayer * conv = new ConvolutionLayer(num_filters, input_depth, filter_len, stride, padding);
+    void add_conv_layer(int num_filters, int input_depth, int filter_len, int learning_rate=0.001, int stride = 1, bool padding=0){
+        ConvolutionLayer * conv = new ConvolutionLayer(num_filters, input_depth, learning_rate, filter_len, stride, padding);
         model.push_back(conv);
         return;
     }
 
-    void add_fcl_layer(int input_size, int output_size){
-        FullyConnectedLayer* fcl = new FullyConnectedLayer(input_size, output_size);
+    void add_fcl_layer(int input_size, int output_size, int learning_rate=0.001){
+        FullyConnectedLayer* fcl = new FullyConnectedLayer(input_size, output_size, learning_rate);
         model.push_back(fcl);
     }
 

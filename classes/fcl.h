@@ -21,7 +21,7 @@ public:
     // double clip_norm = 1;
 
 
-    AdamFCL(double rows, double cols, double learning_rate=0.00001, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
+    AdamFCL(double rows, double cols, double learning_rate, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
     m_dw(rows, vector<double>(cols, 0)),
     v_dw(rows, vector<double>(cols, 0)),
     m_db(rows, 0),
@@ -126,12 +126,12 @@ public:
     AdamFCL adam;
 
 
-    FullyConnectedLayer(int input_size, int output_size) :
+    FullyConnectedLayer(int input_size, int output_size, double learning_rate=0.001) :
         input_size(input_size),
         output_size(output_size),
         weights(output_size, vector<double>(input_size)),
         bias(output_size, 0.0),
-        adam(output_size, input_size)
+        adam(output_size, input_size, learning_rate)
     {
         this->input_size = input_size;
         this->output_size = output_size;
@@ -179,7 +179,7 @@ public:
         return outputs;
     }
     
-    vector<double> backwards(vector<double> dLdZ, float learning_rate) {
+    vector<double> backwards(vector<double> dLdZ) {
         // dLdA == dLdZ*relu_derivative(dLdZ)==relu(dLdZ) because of how relu works a*drelu(a) == relu(a)
         
         // relu(&dLdZ, true); 

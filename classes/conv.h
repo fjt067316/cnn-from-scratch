@@ -26,7 +26,7 @@ public:
     double gamma_init = 0.00001;
     int filter_depth, filter_size, num_filters;
     
-    AdamConv(int num_filters, int filter_depth, int filter_size, double learning_rate=0.00001, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
+    AdamConv(int num_filters, int filter_depth, int filter_size, double learning_rate, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
     m_dw(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0)))),
     v_dw(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0)))),
     m_db(num_filters, 0),
@@ -311,8 +311,8 @@ public:
 
     vector<double> bias; // dB is calcaulted by averaging dLdZ
 
-    ConvolutionLayer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0) :
-            adam(num_filters, input_depth, filter_len)
+    ConvolutionLayer(int num_filters, int input_depth, int filter_len, int learning_rate, int stride = 1, bool padding=0) :
+            adam(num_filters, input_depth, filter_len, learning_rate)
      {
         this->num_filters = num_filters;
         this->filter_len = filter_len;
@@ -394,7 +394,7 @@ public:
         return output;
     }
     
-    vector<vector<vector<double>>> backwards(vector<vector<vector<double>>> dLdZ, double learning_rate) {
+    vector<vector<vector<double>>> backwards(vector<vector<vector<double>>> dLdZ) {
             // dLdZ_lst has 48 8x8 dL/dZ => 24x6x6
             // for each layer in the 48 we calculate the sum of the cube section times the single piece
             // dLdZ is the same size as the output
