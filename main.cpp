@@ -43,7 +43,12 @@ vector<double> decodeCsvString(string csv){
 }
 
 int main(){
-    custom();
+    // custom();
+    Model* model = new Model();
+    model->add_conv_layer(8, 1, 3);
+    model->add_max_pool(2,2);
+    
+    return 1;
 }
 
 // https://www.kaggle.com/code/cdeotte/how-to-choose-cnn-architecture-mnist

@@ -24,8 +24,11 @@ class Model{
         return;
     }
 
-    void train(vector<vector<vector<double>>> image_input){
+    void train(vector<vector<vector<double>>> image_input, int iterations, int learning_rate){
 
+        for (int i = 0; i < model.size(); ++i) {
+            Layer layer = *model[i];
+         }
     }
 
     void add_conv_layer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0){
@@ -34,8 +37,28 @@ class Model{
         return;
     }
 
-    void add_fcl_layer((int input_size, int output_size){
-        FullyConnectedLayer* fcl = new FullyConnetedLayer(input_size, output_size);
+    void add_fcl_layer(int input_size, int output_size){
+        FullyConnectedLayer* fcl = new FullyConnectedLayer(input_size, output_size);
         model.push_back(fcl);
+    }
+
+    void add_max_pool(int pool_size, int stride){
+        Pool* max_pool = new Pool(pool_size, stride);
+        model.push_back(max_pool);
+    }
+
+    void add_batch_norm_1D(){
+        BatchNorm1D* bn = new BatchNorm1D();
+        model.push_back(bn);
+    }
+
+    void add_batch_norm_3D(int filter_depth){
+        BatchNorm3D* bn = new BatchNorm3D(filter_depth);
+        model.push_back(bn);
+    }
+
+    void add_softmax(){
+        Softmax* softmax = new Softmax();
+        model.push_back(softmax);
     }
 };
