@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "tensor.h"
 using namespace std;
 
 #pragma once
@@ -43,14 +44,14 @@ void print_vector(const vector<vector<double>>& vec) {
     cout << "\n]\n";
 }
 
-vector<vector<vector<double>>> reshape_input(vector<double> input_1d, int rows, int cols){
+Tensor<double> reshape_input(vector<double> input_1d, int rows, int cols){
     
-    vector<vector<vector<double>>> output(1, vector<vector<double>>(rows, vector<double>(cols, 0))); // fill matrix with 0's
+    Tensor<double> output(1, rows, cols); 
     int counter = 0;
 
     for(int i=0; i<rows; i++){
         for(int j=0; j<cols; j++){
-            output[0][i][j] = input_1d[counter];
+            output(0,i,j) = input_1d[counter];
             counter++;
         }
     }
@@ -59,13 +60,13 @@ vector<vector<vector<double>>> reshape_input(vector<double> input_1d, int rows, 
 }
 
 
-vector<vector<vector<double>>> reshape(vector<double> input, int depth, int rows, int cols) {
-    vector<vector<vector<double>>> output(depth, vector<vector<double>>(rows, vector<double>(cols, 0.0)));
+Tensor<double> reshape(vector<double> input, int depth, int rows, int cols) {
+    Tensor<double> output(depth, rows,cols);
     int counter = 0;
     for(int d=0; d < depth; d++){
         for(int r=0; r < rows; r++){
             for(int c=0; c < cols; c++){
-                output[d][r][c] = input[counter];
+                output(d, r, c) = input[counter];
                 counter++;
             }
         }

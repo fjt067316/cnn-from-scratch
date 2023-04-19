@@ -3,7 +3,9 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include <cassert>
 #include "template.h"
+#include "tensor.h"
 using namespace std;
 
 #include "zeros.h"
@@ -302,8 +304,8 @@ public:
     int num_filters;
     bool padding;
     vector<vector<vector<vector<double>>>> filters;
-    vector<vector<vector<double>>> _input;
-    vector<vector<vector<double>>> _output;
+    Tensor<double>* _input = new Tensor<double>;
+    Tensor<double>* _output = new Tensor<double>;
     int input_depth;
     AdamConv adam;
 
@@ -311,14 +313,13 @@ public:
 
     vector<double> bias; // dB is calcaulted by averaging dLdZ
 
-    ConvolutionLayer(int num_filters, int input_depth, int filter_len, int learning_rate, int stride = 1, bool padding=0) :
+    ConvolutionLayer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, int stride = 1, bool padding=0) :
             adam(num_filters, input_depth, filter_len, learning_rate)
      {
         this->num_filters = num_filters;
         this->filter_len = filter_len;
         this->stride = stride;
         this->padding = padding;
-
 
         // filters is shape (feature_map_num x input_3d_depth x filter_height x filter_width)
         this->filters.resize(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
@@ -329,38 +330,42 @@ public:
         // fill_with_random(&(this->bias), num_filters*int(((input_rows - filter_len) / stride) + 1) * (int((input_rows - filter_len) / stride) + 1));
     }
 
-    vector<vector<vector<double>>> forward(vector<vector<vector<double>>> input3d) {
+    Tensor<double> forward(Tensor<double> input3d) {
         //https://stackoverflow.com/questions/59887786/algorithim-of-how-conv2d-is-implemented-in-pytorch 
         // Get the input volume dimensions
 
-        _input = input3d;
-        input_depth = input3d.size();
+        input_depth = input3d.depth;
+        assert(input_depth > 0);
 
-        int input_rows = input3d[0].size();
-        int input_cols = input3d[0][0].size();
+        int input_rows = input3d.rows;
+        int input_cols = input3d.cols;
 
         if(padding){
             int padding_num = (filter_len - 1);
-            input_rows = input3d[0].size() + padding_num;
-            input_cols = input3d[0][0].size() + padding_num;
-            
-            vector<vector<vector<double>>> padded_input(input_depth, vector<vector<double>>(input_rows , vector<double>(input_cols, 0.0)));
+            input_rows += padding_num;
+            input_cols += padding_num;
+
+            Tensor<double> padded_input(input_depth, input_rows , input_cols );
             int start_idx = int(padding_num/2);
             
             // try to pad evenly left and right ie 1 zero on left 2 on right 1 on top 2 on bottom
             for (int d = 0; d < input_depth; d++) {
-                for (int i = 0; i < input3d[0].size(); i++) {
-                    for (int j = 0; j < input3d[0][0].size() ; j++) {
-                        padded_input[d][i+start_idx][j+start_idx] = input3d[d][i][j];
+                for (int i = 0; i < input_rows-padding_num; i++) {
+                    for (int j = 0; j < input_cols-padding_num; j++) {
+                        padded_input(d, i+start_idx, j+start_idx) = input3d(d, i, j);
                     }
                 }
             }
-            _input = padded_input;
+            (*_input) = padded_input;
+        } else {
+            (*_input) = input3d;
         }
+
+
 
         int output_rows = int((input_rows - filter_len) / stride) + 1;
         int output_cols = int((input_cols - filter_len) / stride) + 1;
-        vector<vector<vector<double>>> output(num_filters, vector<vector<double>>(output_rows, vector<double>(output_cols, 0)));
+        Tensor<double> output(num_filters,output_rows,output_cols);
         // output = np.zeros((self.num_filters, output_rows, output_cols))
         for (int filter_idx = 0; filter_idx < filters.size(); filter_idx++){
             auto filter = filters[filter_idx];
@@ -371,7 +376,7 @@ public:
                     for (int d = 0; d < input_depth; d++) {
                         for (int k = 0; k < filter_len; k++) {
                             for (int l = 0; l < filter_len; l++) {
-                                output[filter_idx][i][j] += _input[d][r + k][c + l] * filter[d][k][l];
+                                output(filter_idx, i, j) += (*_input)(d, r + k, c + l) * filter[d][k][l];
                             }
                         }
                     }
@@ -383,23 +388,23 @@ public:
             for(int j=0; j<output_rows; j++){
                 for(int k=0; k<output_cols; k++){
                     // output[i][j][k] += bias[i][j][k];
-                    output[i][j][k] += bias[i];
+                    output(i, j, k) += bias[i];
                 }
             }
         }
 
 
         relu(&output);
-        _output = output;
+        (*_output) = output;
         return output;
     }
     
-    vector<vector<vector<double>>> backwards(vector<vector<vector<double>>> dLdZ) {
+    Tensor<double> backwards(vector<vector<vector<double>>> dLdZ) {
             // dLdZ_lst has 48 8x8 dL/dZ => 24x6x6
             // for each layer in the 48 we calculate the sum of the cube section times the single piece
             // dLdZ is the same size as the output
 
-        vector<vector<vector<double>>> dLdZ_next(_input.size(), vector<vector<double>>(_input[0].size()-padding*(filter_len-1), vector<double>(_input[0][0].size()-padding*(filter_len-1))));
+        Tensor<double> dLdZ_next((*_input).depth, (*_input).rows-padding*(filter_len-1), (*_input).cols-padding*(filter_len-1));
         vector<vector<vector<vector<double>>>> dLdW(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
         
         for (int dLdZ_idx = 0; dLdZ_idx < dLdZ.size(); dLdZ_idx++) {
@@ -416,9 +421,9 @@ public:
             // every value in the 3d filter v will be updated such that
             // v = dLdZ11*a1 + dLdZ12*a3 ...
             vector<vector<vector<double>>> filter = filters[dLdZ_idx];
-            int input_depth = _input.size();
-            int input_rows = _input[0].size()+padding*(filter_len-1);
-            int input_cols = _input[0][0].size()+padding*(filter_len-1);
+            int input_depth = (*_input).depth;
+            int input_rows = (*_input).rows+padding*(filter_len-1);
+            int input_cols = (*_input).cols+padding*(filter_len-1);
             int filter_len = this->filter_len;
             int output_rows = int((input_rows - this->filter_len) / stride) + 1;
             int output_cols = int((input_cols - this->filter_len) / stride) + 1;
@@ -429,8 +434,8 @@ public:
                     for (int d = 0; d < input_depth; d++) {
                         for (int k = 0; k < filter_len; k++) {
                             for (int l = 0; l < filter_len; l++) {
-                                dLdW[dLdZ_idx][d][k][l] += (_input[d][i + k][j + l] * dLdZ_flat[dldz_pos]); // negative because everything was getting inverted
-                                dLdZ_next[d][i+k][j+l] += filter[d][k][l] * dLdZ_flat[dldz_pos];
+                                dLdW[dLdZ_idx][d][k][l] += ((*_input)(d, i + k, j + l) * dLdZ_flat[dldz_pos]); // negative because everything was getting inverted
+                                dLdZ_next(d, i+k, j+l) += filter[d][k][l] * dLdZ_flat[dldz_pos];
                             }
                         }
                     }

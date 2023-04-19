@@ -8,10 +8,11 @@ using namespace std;
 template <typename T>
 class Tensor {
 public:
-    Tensor(int size1) : data(size1), size(data.size()) {}
-    Tensor(int size1, int size2) : data(size1 * size2), rows(size1), cols(size2), size(data.size()) {}
-    Tensor(int size1, int size2, int size3) : data(size1 * size2 * size3), depth(size1), rows(size2), cols(size3), size(data.size()) {}
-    Tensor(int size1, int size2, int size3, int size4) : data(size1 * size2 * size3 * size4), filter_num(size1), depth(size2), rows(size3), cols(size4), size(data.size()) {}
+    Tensor() : data(0), size(0), rows(0), cols(0), depth(0), filter_num(0) {}
+    Tensor(int size1) : data(size1, 0), size(data.size()) {}
+    Tensor(int size1, int size2) : data(size1 * size2, 0), rows(size1), cols(size2), size(data.size()) {}
+    Tensor(int size1, int size2, int size3) : data(size1 * size2 * size3, 0), depth(size1), rows(size2), cols(size3), size(data.size()) {}
+    Tensor(int size1, int size2, int size3, int size4) : data(size1 * size2 * size3 * size4, 0), filter_num(size1), depth(size2), rows(size3), cols(size4), size(data.size()) {}
 
     T& operator[](int i) {
         if (size == 0) {
@@ -40,6 +41,13 @@ public:
         }
         return data[i * (depth * rows * cols) + j * (rows * cols) + k * cols + l];
     }
+
+    void push_back(const T& val) {
+        data.push_back(val);
+        size = data.size();
+        return;
+    }
+
 
 
 public:
