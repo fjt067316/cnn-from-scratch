@@ -4,6 +4,7 @@
 #include <random>
 #include <iostream>
 using namespace std;
+
 #pragma once
 
 void dropout3d(double probability, vector<vector<vector<double>>>& inputVector)

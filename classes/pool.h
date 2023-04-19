@@ -1,12 +1,14 @@
-
 #include <vector>
 #include <cmath>
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "template.h"
 using namespace std;
 
-class Pool {
+#pragma once
+
+class Pool : public Layer {
 public:
     int pool_size;
     int stride;

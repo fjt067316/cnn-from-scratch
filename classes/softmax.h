@@ -3,9 +3,12 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "template.h"
 using namespace std;
 
-class Softmax {
+#pragma once
+
+class Softmax : public Layer {
 public:
 vector<double> last_input;
 

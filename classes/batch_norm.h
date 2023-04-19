@@ -3,9 +3,12 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "template.h"
 using namespace std;
 
-class BatchNorm1D{ // input and output are same dimensions
+#pragma once
+
+class BatchNorm1D : public Layer { // input and output are same dimensions
 // https://www.analyticsvidhya.com/blog/2021/03/introduction-to-batch-normalization/ 
 public:
     double gamma;
@@ -87,7 +90,7 @@ public:
     }
 };
 
-class BatchNorm3D{ // input and output are same dimensions
+class BatchNorm3D : public Layer { // input and output are same dimensions
 public:
     vector<double> gamma;
     vector<double> beta;

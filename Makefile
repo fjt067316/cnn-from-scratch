@@ -1,10 +1,11 @@
 CC = g++
-CFLAGS = -pthread -std=c++11
+CFLAGS = -pthread -std=c++11 -I./classes
 TARGET = main.o
+HEADERS = classes/activation_functions.h classes/conv.h classes/softmax.h classes/fcl.h classes/pool.h classes/utils.h classes/zeros.h classes/batch_norm.h
 
 all: $(TARGET)
 
-$(TARGET): main.cpp classes.h
+$(TARGET): main.cpp $(HEADERS)
 	$(CC) $(CFLAGS) -o $(TARGET) main.cpp
 
 clean:

@@ -14,10 +14,11 @@
 #include "classes/zeros.h"
 #include "classes/batch_norm.h"
 #include "classes/activation_functions.h"
+#include "model.h"
 using namespace std;
 
 int working();
-int simple();
+int heavy();
 int custom();
 int lr();
 // The function that will be executed in each thread
@@ -42,11 +43,11 @@ vector<double> decodeCsvString(string csv){
 }
 
 int main(){
-    working();
+    custom();
 }
 
 // https://www.kaggle.com/code/cdeotte/how-to-choose-cnn-architecture-mnist
-int simple() { 
+int heavy() { 
     // 784 - [32C5-P2] - [64C5-P2] - 128
 
     ConvolutionLayer* conv_32C5 = new ConvolutionLayer(32, 1, 5, 1); // 32x24x24

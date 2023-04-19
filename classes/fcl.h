@@ -3,8 +3,10 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "template.h"
 using namespace std;
 
+#pragma once
 
 class AdamFCL{
 public:
@@ -16,9 +18,8 @@ public:
     int iterations = 100;
     double decay_rate = 0.8;
     double gamma_init = 0.00001;
-    // rows = dw.size() cols = dw[0].size()
 
-    AdamFCL(double rows, double cols, double learning_rate=0.0005, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
+    AdamFCL(double rows, double cols, double learning_rate=0.00001, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
     m_dw(rows, vector<double>(cols, 0)),
     v_dw(rows, vector<double>(cols, 0)),
     m_db(rows, 0),
@@ -112,7 +113,7 @@ public:
 };
 
 
-class FullyConnectedLayer {
+class FullyConnectedLayer : public Layer {
 public:
     int input_size;
     int output_size;

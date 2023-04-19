@@ -5,6 +5,7 @@
 #include <random>
 #include <iostream>
 using namespace std;
+
 #pragma once
 
 void printArray(vector<double> arr, int size) {

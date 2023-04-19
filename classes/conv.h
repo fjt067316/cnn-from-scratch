@@ -3,11 +3,15 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "template.h"
 using namespace std;
 
 #include "zeros.h"
 #include "utils.h"
 #include "activation_functions.h"
+
+#pragma once
+
 
 class AdamConv{
 public:
@@ -20,8 +24,8 @@ public:
     double decay_rate = 0.8;
     double gamma_init = 0.00001;
     int filter_depth, filter_size, num_filters;
-
-    AdamConv(int num_filters, int filter_depth, int filter_size, double learning_rate=0.0005, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
+    
+    AdamConv(int num_filters, int filter_depth, int filter_size, double learning_rate=0.00001, double beta1=0.9, double beta2=0.999, double epsilon=1e-8) :
     m_dw(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0)))),
     v_dw(num_filters, vector<vector<vector<double>>>(filter_depth, vector<vector<double>>(filter_size, vector<double>(filter_size, 0)))),
     m_db(num_filters, 0),
@@ -286,7 +290,7 @@ public:
 // };
 
 
-class ConvolutionLayer 
+class ConvolutionLayer : public Layer
 // https://towardsdatascience.com/gentle-dive-into-math-behind-convolutional-neural-networks-79a07dd44cf9
 // https://eli.thegreenplace.net/2018/depthwise-separable-convolutions-for-machine-learning/ 
 {
@@ -302,7 +306,7 @@ public:
     AdamConv adam;
 
     // vector<vector<vector<double>>> bias; // bias is added to 3d result after apply every filter
-    
+
     vector<double> bias; // dB is calcaulted by averaging dLdZ
 
     ConvolutionLayer(int num_filters, int input_depth, int filter_len, int stride = 1, bool padding=0) :
