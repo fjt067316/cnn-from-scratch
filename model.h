@@ -25,9 +25,10 @@ class Model{
     }
 
     void train(vector<vector<vector<double>>> image_input, int iterations, int learning_rate){
-
+        
         for (int i = 0; i < model.size(); ++i) {
             Layer layer = *model[i];
+
          }
     }
 
