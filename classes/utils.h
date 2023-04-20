@@ -4,11 +4,14 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include "tensor.h"
+#include "template.h"
+
 using namespace std;
 
 #pragma once
 
-void printArray(vector<double> arr, int size) {
+void printArray(Tensor<double> arr, int size) {
     for(int i=0; i<size; i++) {
         cout << arr[i] << " ";
     }
@@ -16,19 +19,15 @@ void printArray(vector<double> arr, int size) {
 }
 
 void print_vector(const vector<vector<vector<double>>>& vec) {
-    cout << "[";
-    for (const auto& v1 : vec) {
-        cout << "\n  [";
-        for (const auto& v2 : v1) {
-            cout << "\n    [";
-            for (const auto& elem : v2) {
-                cout << elem << ", ";
+   for (const auto& outer : vec) {
+        for (const auto& middle : outer) {
+            for (const auto& inner : middle) {
+                std::cout << inner << " ";
             }
-            cout << "],";
+            std::cout << std::endl;
         }
-        cout << "\n  ],";
+        std::cout << std::endl;
     }
-    cout << "\n]\n";
 }
 
 void print_vector(const vector<vector<double>>& vec) {
@@ -43,14 +42,40 @@ void print_vector(const vector<vector<double>>& vec) {
     cout << "\n]\n";
 }
 
-vector<vector<vector<double>>> reshape_input(vector<double> input_1d, int rows, int cols){
+void print_tensor(Tensor<double> t) {
+    cout << "[";
+    for (int i = 0; i < t.depth; i++) {
+        cout << "\n  [";
+        for (int j = 0; j < t.rows; j++) {
+            cout << "\n    [";
+            for (int k = 0; k < t.cols; k++) {
+                cout << t(i, j, k);
+                if (k < t.cols - 1) {
+                    cout << ", ";
+                }
+            }
+            cout << "]";
+            if (j < t.depth - 1) {
+                cout << ",";
+            }
+        }
+        cout << "\n  ]";
+        if (i < t.filter_num - 1) {
+            cout << ",";
+        }
+    }
+    cout << "\n]\n";
+}
+
+
+Tensor<double> reshape_input(vector<double> input_1d, int rows, int cols){
     
-    vector<vector<vector<double>>> output(1, vector<vector<double>>(rows, vector<double>(cols, 0))); // fill matrix with 0's
+    Tensor<double> output(1, rows, cols); 
     int counter = 0;
 
     for(int i=0; i<rows; i++){
         for(int j=0; j<cols; j++){
-            output[0][i][j] = input_1d[counter];
+            output(0,i,j) = input_1d[counter];
             counter++;
         }
     }
@@ -58,39 +83,6 @@ vector<vector<vector<double>>> reshape_input(vector<double> input_1d, int rows, 
     return output;
 }
 
-
-vector<vector<vector<double>>> reshape(vector<double> input, int depth, int rows, int cols) {
-    vector<vector<vector<double>>> output(depth, vector<vector<double>>(rows, vector<double>(cols, 0.0)));
-    int counter = 0;
-    for(int d=0; d < depth; d++){
-        for(int r=0; r < rows; r++){
-            for(int c=0; c < cols; c++){
-                output[d][r][c] = input[counter];
-                counter++;
-            }
-        }
-    }
-    return output;
-}
-
-vector<double> flatten(vector<vector<vector<double>>> feature_map) {
-    int num_filters = feature_map.size();
-    int rows = feature_map[0].size();
-    int cols = feature_map[0][0].size();
-
-    vector<double> flat(num_filters * rows * cols);
-
-    int idx = 0;
-    for (int f = 0; f < num_filters; f++) {
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                flat[idx++] = feature_map[f][r][c];
-            }
-        }
-    }
-
-    return flat;
-}
 
 vector<double> min_max_scale(vector<double> input) {
     // Find the minimum and maximum values in the input vector
@@ -129,3 +121,65 @@ void print_shape(const vector<double> &vec)
     int a = vec.size();
     cout << "(" << a << ")" << endl;
 }
+
+
+pair<int, double> get_pred(Tensor<double> outputs) {
+    double max = -10000000;
+    int idx = -1;
+    int k = 0;
+    while (k < outputs.size) {
+        if (outputs[k] > max) {
+            max = outputs[k];
+            idx = k;
+        }
+        k++;
+    }
+    // cout << idx << endl;
+    // assert(idx >= 0);
+    return make_pair(idx, max);
+}
+
+class Flatten : public Layer { // assumes we always flatten down on forward pass and reshape on backpass
+public:
+    int input_depth;
+    int intput_rows;
+    int input_cols;
+
+    Tensor<double> forward(Tensor<double> input_3d) {
+        input_depth = input_3d.depth;
+        intput_rows = input_3d.rows;
+        input_cols = input_3d.cols;
+        // cout << input_depth << endl;
+
+        Tensor<double> flat(input_depth * intput_rows * input_cols);
+
+        int idx = 0;
+        for (int f = 0; f < input_depth; f++) {
+            for (int r = 0; r < intput_rows; r++) {
+                for (int c = 0; c < input_cols; c++) {
+                    flat[idx] = input_3d(f, r, c);
+                    idx++;
+                }
+            }
+        }
+
+        return flat;
+    }
+    
+    Tensor<double> backwards(Tensor<double> input) {
+        Tensor<double> output(input_depth, intput_rows, input_cols);
+
+        int counter = 0;
+        for(int d=0; d < input_depth; d++){
+            for(int r=0; r < intput_rows; r++){
+                for(int c=0; c < input_cols; c++){
+                    output(d, r, c) = input[counter];
+                    counter++;
+                }
+            }
+        }
+        return output;
+    }
+
+    
+};

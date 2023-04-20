@@ -1,0 +1,8 @@
+adam optimizer for batch layers
+same input / output format for every function,
+ie every layer takes a vector<...> *input and outputs a vector<...> * which we set to a tensor object
+
+dropout function for tensor
+
+use function pitners for each layers input and output to avoid
+unessecary copes
