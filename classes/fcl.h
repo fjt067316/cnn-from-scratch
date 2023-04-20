@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <random>
 #include <iostream>
+#include <cassert>
 #include "template.h"
 using namespace std;
 
@@ -36,7 +37,7 @@ public:
         this->learning_rate = learning_rate;
     }
 
-    void update( vector<vector<double>> *w, vector<double> *b, vector<vector<double>> dw, vector<double> db) { // t is current timestep
+    void update( vector<vector<double>> *w, vector<double> *b, vector<vector<double>> dw, Tensor<double> db) { // t is current timestep
         // dw, db are what we would usually update params with gradient descent
         // printArray(m_dw[0], 10);
         // printArray(dw[0], 10);
@@ -92,14 +93,16 @@ public:
             m_db_corr[j] = m_db[j] / denom_mb;
             v_db_corr[j] = v_db[j] / denom_vb;
         }
-
+        double clip_threshold = 0;
         // printArray(m_dw_corr[0], 10);
         // update weights and biases 
         // double gamma = gamma_init * decay_rate;
         for(int i=0; i< (*w).size(); i++){
             for(int j=0; j< (*w)[i].size(); j++){
-
                 (*w)[i][j] -= learning_rate * (m_dw_corr[i][j] / (sqrt(v_dw_corr[i][j]) + epsilon));
+                if(clip_threshold > 0){
+                    (*w)[i][j] = min(max((*w)[i][j], -clip_threshold), clip_threshold); 
+                }
             }
         }
         // printArray(m_db_corr, 10);
@@ -108,6 +111,9 @@ public:
         // b -= learning_rate *  dL/dZ
         for(int i=0; i < (*b).size(); i++){
             (*b)[i] -=learning_rate * (m_db_corr[i] / (sqrt(v_db_corr[i]) + epsilon)); 
+            if(clip_threshold > 0){
+                (*b)[i] = min(max((*b)[i], -clip_threshold), clip_threshold); 
+            }
         }
         
         return;
@@ -121,12 +127,14 @@ public:
     int output_size;
     vector<vector<double>> weights; // matrix of shape (output_size, input_size)
     vector<double> bias; // vector of shape (output_size)
-    vector<double> input_matrix;
+    Tensor<double> input_matrix;
     // AdamFCL* adam;
     AdamFCL adam;
+    bool dropout;
+    double learning_rate;
 
 
-    FullyConnectedLayer(int input_size, int output_size, double learning_rate=0.001) :
+    FullyConnectedLayer(int input_size, int output_size, double learning_rate, bool dropout) :
         input_size(input_size),
         output_size(output_size),
         weights(output_size, vector<double>(input_size)),
@@ -135,6 +143,7 @@ public:
     {
         this->input_size = input_size;
         this->output_size = output_size;
+        this->learning_rate = learning_rate;
         // adam = new AdamFCL(output_size, input_size);
 
         // Initialize weights with random values
@@ -145,22 +154,25 @@ public:
         for (auto& row : this->weights) {
             generate(row.begin(), row.end(), [&](){ return dist(gen); });
         }
-
     }
 
-    vector<double> forward(vector<double> input_matrix, bool dropout=false) {
+    Tensor<double> forward(Tensor<double> input_matrix) {
         this->input_matrix = input_matrix;
-        vector<double> outputs(output_size, 0.0);
+        Tensor<double> outputs(output_size);
 
 
         if(dropout){
-            vector<vector<double>> mask(output_size, vector<double>(input_size));
-            set_mask(&mask);
-            // cout << mask[0][4];
+            vector<double> mask(output_size);
+            set_mask(&mask); // 0.4 chance dropout
+            // cout << mask[0] << endl;
 
             for (int i = 0; i < output_size; i++) {
+                if(mask[i] == 0){
+                    outputs[i] = 0;
+                    continue;
+                }
                 for (int j = 0; j < input_size; j++) {
-                    outputs[i] += mask[i][j] * this->weights[i][j] * input_matrix[j];
+                    outputs[i] +=  this->weights[i][j] * input_matrix[j];
                 }
                 outputs[i] += this->bias[i];
             }
@@ -179,43 +191,47 @@ public:
         return outputs;
     }
     
-    vector<double> backwards(vector<double> dLdZ) {
+    Tensor<double> backwards(Tensor<double> dLdZ) {
         // dLdA == dLdZ*relu_derivative(dLdZ)==relu(dLdZ) because of how relu works a*drelu(a) == relu(a)
-        
+        assert((dLdZ.rows==0) && (dLdZ.cols==0) && (dLdZ.depth==0)); // asset dLdZ is 1d
         // relu(&dLdZ, true); 
+        // dLdZ.print();
+        // print_vector(weights);
 
         // calculate next layer dLdZ
-        vector<double> next_dLdZ(input_size, 0.0);
+        Tensor<double> next_dLdZ(input_size);
 
         for(int c=0; c < input_size; c++){
-            for(int r=0; r < dLdZ.size(); r++){
+            for(int r=0; r < dLdZ.size; r++){
                 next_dLdZ[c] += weights[r][c]*dLdZ[r];
             }
         }
-
         // calculate dLdW to update weights
         vector<vector<double>> dLdW(this->output_size, vector<double>(this->input_size));
-
-        for(int r=0; r < dLdZ.size(); r++){
+        
+        for(int r=0; r < dLdZ.size; r++){
             for(int c=0; c < input_size; c++){
                 dLdW[r][c] = dLdZ[r]*input_matrix[c];
             }
         }
 
-        adam.update(&weights, &bias, dLdW, dLdZ);
+        // print_vector(dLdW);
+        // input_matrix.print();
+
+        // adam.update(&weights, &bias, dLdW, dLdZ);
 
         // // w -= learning_rate * dL/dW
-        // for(int i=0; i< weights.size(); i++){
-        //     for(int j=0; j< weights[i].size(); j++){
-        //         weights[i][j] -= learning_rate * dLdW[i][j];
-        //     }
-        // }
-        // // b -= learning_rate *  dL/dZ
-        // for(int i=0; i<bias.size(); i++){
-        //     bias[i] -= learning_rate* 10 * dLdZ[i]; // make learning rate for bias larger because its smaller number smaller condition more likely to convergeto 0
-        // }
+        for(int i=0; i< weights.size(); i++){
+            for(int j=0; j< weights[i].size(); j++){
+                weights[i][j] -= learning_rate * dLdW[i][j];
+            }
+        }
+        // b -= learning_rate *  dL/dZ
+        for(int i=0; i<bias.size(); i++){
+            bias[i] -= learning_rate* 10 * dLdZ[i]; // make learning rate for bias larger because its smaller number smaller condition more likely to convergeto 0
+        }
+        // print_vector(weights);
         // printArray(bias, 10);
-
         return next_dLdZ;
     }
 };

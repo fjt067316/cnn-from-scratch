@@ -21,7 +21,7 @@ public:
         stride = stride_;
     }
 
-    vector<vector<vector<double>>> max_pool(Tensor<double> input3d) {
+    Tensor<double> forward(Tensor<double> input3d) {
         int input_depth = input3d.depth;
         int input_rows = input3d.rows;
         int input_cols = input3d.cols;
@@ -32,7 +32,7 @@ public:
         int output_rows = (input_rows - this->pool_size) / this->stride + 1;
         int output_cols = (input_cols - this->pool_size) / this->stride + 1;
 
-        vector<vector<vector<double>>> output(output_depth, vector<vector<double>>(output_rows, vector<double>(output_cols)));
+        Tensor<double> output(output_depth, output_rows, output_cols);
         for (int d = 0; d < output_depth; d++) {
             for (int i = 0; i < output_rows; i++) {
                 for (int j = 0; j < output_cols; j++) {
@@ -48,7 +48,7 @@ public:
                             max_val = max(max_val, pool_region[r][c]);
                         }
                     }
-                    output[d][i][j] = max_val;
+                    output(d, i, j) = max_val;
                 }
             }
         }
@@ -56,8 +56,8 @@ public:
         return output;
     }
 
-    vector<vector<vector<double>>> upsample(Tensor<double> input3d) {  // 24x6x6 => 24x12x12
-        vector<vector<vector<double>>> output(this->num_filters, vector<vector<double>>(this->input_rows, vector<double>(this->input_cols)));
+    Tensor<double> backwards(Tensor<double> input3d) {  // 24x6x6 => 24x12x12
+        Tensor<double> output(this->num_filters, this->input_rows, this->input_cols);
 
         for (int filter_idx = 0; filter_idx < this->num_filters; filter_idx++) {
             // vector<vector<double>> filter_matrix = input3d[filter_idx];
@@ -76,11 +76,10 @@ public:
                     if ((j % switch_cols) == 0) {
                         c += 1;
                     }
-                    output[filter_idx][i][j] = input3d(filter_idx, r, c);
+                    output(filter_idx, i, j) = input3d(filter_idx, r, c);
                 }
             }
         }
-
         return output;
     }
 };

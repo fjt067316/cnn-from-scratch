@@ -78,14 +78,12 @@ void he_weight_init(vector<double> *bias, int size)
     }
 }
 
-void set_mask(vector<vector<double>> *mask) {
+void set_mask(vector<double> *mask) {
     random_device rd;
     mt19937 gen(rd());
-    binomial_distribution<> d(1, 0.9);
+    binomial_distribution<> d(1, 0.6);
 
     for(int i = 0; i < mask->size(); i++) {
-        for (int j = 0; j < (*mask)[0].size(); j++) {
-            (*mask)[i][j] = d(gen);
-        }
+        (*mask)[i] = d(gen);
     }
 }

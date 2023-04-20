@@ -1,18 +1,20 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <cassert>
 using namespace std;
 
 #pragma once
 
+
 template <typename T>
 class Tensor {
 public:
-    Tensor() : data(0), size(0), rows(0), cols(0), depth(0), filter_num(0) {}
-    Tensor(int size1) : data(size1, 0), size(data.size()) {}
-    Tensor(int size1, int size2) : data(size1 * size2, 0), rows(size1), cols(size2), size(data.size()) {}
-    Tensor(int size1, int size2, int size3) : data(size1 * size2 * size3, 0), depth(size1), rows(size2), cols(size3), size(data.size()) {}
-    Tensor(int size1, int size2, int size3, int size4) : data(size1 * size2 * size3 * size4, 0), filter_num(size1), depth(size2), rows(size3), cols(size4), size(data.size()) {}
+    Tensor() : data(0), size(0), rows(0), cols(0), depth(0), dims(0), filter_num(0) {}
+    Tensor(int size1) : data(size1, 0), dims(1), size(data.size()) {}
+    Tensor(int size1, int size2) : data(size1 * size2, 0), rows(size1), cols(size2), dims(2), size(data.size()) {}
+    Tensor(int size1, int size2, int size3) : data(size1 * size2 * size3, 0), depth(size1), rows(size2), cols(size3), dims(3), size(data.size()) {}
+    Tensor(int size1, int size2, int size3, int size4) : data(size1 * size2 * size3 * size4, 0), filter_num(size1), depth(size2), rows(size3), cols(size4), dims(4), size(data.size()) {}
 
     T& operator[](int i) {
         if (size == 0) {
@@ -29,7 +31,7 @@ public:
     }
 
     T& operator()(int i, int j, int k) {
-        if (depth == 0) {
+        if (dims != 3) {
             throw out_of_range("Tensor is not a 3D vector");
         }
         return data[i * rows * cols + j * cols + k];
@@ -48,6 +50,65 @@ public:
         return;
     }
 
+    // // add item to tensor at given indices
+    // void operator = (const <t> &Value ) { 
+    //      feet = D.feet;
+    //      inches = D.inches;
+    //   }
+    void operator()(int i, int j, const T& val) {
+        if ((rows == 0) || (cols == 0) ) {
+            throw out_of_range("Tensor is not a 2D vector");
+        }
+        data[i * rows + j] = val;
+    }
+    
+    void operator()(int i, int j, int k, const T& val) {
+        if (depth == 0) {
+            throw out_of_range("Tensor is not a 3D vector");
+        }
+        data[i * rows * cols + j * cols + k] = val;
+    }
+    
+    void operator()(int i, int j, int k, int l, const T& val) {
+        if (filter_num == 0) {
+            throw out_of_range("Tensor is not a 4D vector");
+        }
+        data[i * (depth * rows * cols) + j * (rows * cols) + k * cols + l] = val;
+    }
+
+    void zero() {
+        for(int i=0; i < data.size(); i++){
+            data[i] = 0;
+        }
+    }
+
+    void print() {
+        if (dims == 1) {
+            for (int i = 0; i < size; i++) {
+                cout << data[i] << " ";
+            }
+            cout << endl;
+        } else if (dims == 2) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    cout << data[i * rows + j] << " ";
+                }
+                cout << endl;
+            }
+        } else if (dims == 3) {
+            for (int i = 0; i < depth; i++) {
+                for (int j = 0; j < rows; j++) {
+                    for (int k = 0; k < cols; k++) {
+                        cout << data[i * rows * cols + j * cols + k] << " ";
+                    }
+                    cout << endl;
+                }
+                cout << endl;
+            }
+        } else {
+            throw out_of_range("Tensor has more than 3 dimensions");
+        }
+    }
 
 
 public:
@@ -57,6 +118,7 @@ public:
     int cols = 0;
     int depth = 0;
     int filter_num = 0;
+    int dims = 0;
 };
 
 
