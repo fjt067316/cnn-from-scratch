@@ -320,12 +320,13 @@ public:
     Tensor<double> _output;
     int input_depth;
     AdamConv adam;
+    bool adam_optimizer;
 
     // vector<vector<vector<double>>> bias; // bias is added to 3d result after apply every filter
 
     vector<double> bias; // dB is calcaulted by averaging dLdZ
 
-    ConvolutionLayer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, int stride = 1, bool padding=0) :
+    ConvolutionLayer(int num_filters, int input_depth, int filter_len, double learning_rate, bool adam_optimizer, int stride, bool padding) :
             adam(num_filters, input_depth, filter_len, learning_rate)
      {
         this->num_filters = num_filters;
@@ -467,22 +468,27 @@ public:
             dLdB[i] /= (dLdZ.rows * dLdZ.cols); // average it
         }
 
-        // adam.update(&filters, &bias, dLdW, dLdB);
-        
-            // Apply dLdW to feature maps
-            // print_vector(dLdW[1]);
-            // print_vector(filters[1]);
-
-        for(int filter_num=0; filter_num < num_filters; filter_num++){
-            for(int d=0; d < input_depth; d++){
-                for(int r=0; r<filter_len; r++){
-                    for(int c=0; c<filter_len; c++){
-                        filters[filter_num][d][r][c] -= 0.01 * dLdW[filter_num][d][r][c];
+        if(adam_optimizer){
+            adam.update(&filters, &bias, dLdW, dLdB);
+        } else{
+            for(int filter_num=0; filter_num < num_filters; filter_num++){
+                // Apply dLdW to feature maps
+                // print_vector(dLdW[1]);
+                // print_vector(filters[1]);
+                for(int d=0; d < input_depth; d++){
+                    for(int r=0; r<filter_len; r++){
+                        for(int c=0; c<filter_len; c++){
+                            filters[filter_num][d][r][c] -= 0.01 * dLdW[filter_num][d][r][c];
+                        }
                     }
                 }
+                bias[filter_num] -= 0.01 * dLdB[filter_num];
             }
-            bias[filter_num] -= 0.01 * dLdB[filter_num];
         }
+        
+
+
+
         return dLdZ_next;
     }
 };

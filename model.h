@@ -35,9 +35,8 @@ class Model{
         return;
     }
 
-    int forward(Tensor<double> x, int image_label){ // int iterations, int learning_rate
+    int forward(Tensor<double> x, int image_label, float* loss=nullptr){ // int iterations, int learning_rate
         Layer* layer;
-        
         
         Tensor<double> dLdZ(10);
         // for(int n=0; n < iterations; n++){
@@ -50,9 +49,11 @@ class Model{
             pair<int, double> pred = get_pred(x);
             int pred_idx = pred.first;
             double pred_val = pred.second;
+            (*loss) += -log(pred_val);
             dLdZ.zero();
-            dLdZ[image_label] = -1 / x[image_label];
+            dLdZ[image_label] = -1 / (x[image_label]+1e-8);
             x = dLdZ;
+
             // cout << x[image_label] << endl;
             for (int i = size-1; i >= 0; --i) {
                 layer = model[i];
@@ -64,14 +65,14 @@ class Model{
 
     }
 
-    void add_conv_layer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, int stride = 1, bool padding=0){
-        ConvolutionLayer * conv = new ConvolutionLayer(num_filters, input_depth, filter_len, learning_rate, stride, padding);
+    void add_conv_layer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, bool use_adam=0, int stride = 1, bool padding=0){
+        ConvolutionLayer * conv = new ConvolutionLayer(num_filters, input_depth, filter_len, learning_rate, use_adam, stride, padding);
         model.push_back(conv);
         size++;
     }
 
-    void add_fcl_layer(int input_size, int output_size, double learning_rate=0.001, bool dropout=false){
-        FullyConnectedLayer* fcl = new FullyConnectedLayer(input_size, output_size, learning_rate, dropout);
+    void add_fcl_layer(int input_size, int output_size, double learning_rate=0.001, bool use_adam=0, bool dropout=false){
+        FullyConnectedLayer* fcl = new FullyConnectedLayer(input_size, output_size, learning_rate, use_adam, dropout);
         model.push_back(fcl);
         size++;
     }
@@ -82,8 +83,8 @@ class Model{
         size++;
     }
 
-    void add_batch_norm_1D(){
-        BatchNorm1D* bn = new BatchNorm1D();
+    void add_batch_norm_1D(float learning_rate=0.001){
+        BatchNorm1D* bn = new BatchNorm1D(learning_rate);
         model.push_back(bn);
         size++;
     }

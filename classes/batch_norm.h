@@ -8,6 +8,12 @@ using namespace std;
 
 #pragma once
 
+/*   
+
+Batch norm scales data to a mean of 0 and standard deviation of 1 ie standard gaussian
+
+*/
+
 class BatchNorm1D : public Layer { // input and output are same dimensions
 // https://www.analyticsvidhya.com/blog/2021/03/introduction-to-batch-normalization/ 
 public:
@@ -18,7 +24,7 @@ public:
     double variance;
     double learning_rate;
 
-    BatchNorm1D( double learning_rate=0.001, double epsilon = 1e-5){
+    BatchNorm1D( double learning_rate, double epsilon = 1e-5){
         // Initialize gamma and beta as 1 and 0 to start
         this->gamma = 1;
         this->beta = 0;
@@ -119,7 +125,6 @@ public:
     Tensor<double> forward(Tensor<double> input) { // epsilon helps prevent division by 0
         int channel_rows = input.rows;
         int channel_cols = input.cols;
-
         int total = channel_cols * channel_rows;
 
         for(int idx=0; idx < num_channels; idx++){

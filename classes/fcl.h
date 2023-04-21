@@ -131,10 +131,11 @@ public:
     // AdamFCL* adam;
     AdamFCL adam;
     bool dropout;
+    bool adam_optimizer;
     double learning_rate;
 
 
-    FullyConnectedLayer(int input_size, int output_size, double learning_rate, bool dropout) :
+    FullyConnectedLayer(int input_size, int output_size, double learning_rate, bool adam_optimizer, bool dropout) :
         input_size(input_size),
         output_size(output_size),
         weights(output_size, vector<double>(input_size)),
@@ -218,17 +219,20 @@ public:
         // print_vector(dLdW);
         // input_matrix.print();
 
-        // adam.update(&weights, &bias, dLdW, dLdZ);
-
-        // // w -= learning_rate * dL/dW
-        for(int i=0; i< weights.size(); i++){
-            for(int j=0; j< weights[i].size(); j++){
-                weights[i][j] -= learning_rate * dLdW[i][j];
+        if(adam_optimizer){
+            adam.update(&weights, &bias, dLdW, dLdZ);
+        } else {
+            // w -= learning_rate * dL/dW
+            for(int i=0; i< weights.size(); i++){
+                for(int j=0; j< weights[i].size(); j++){
+                    weights[i][j] -= learning_rate * dLdW[i][j];
+                }
             }
-        }
-        // b -= learning_rate *  dL/dZ
-        for(int i=0; i<bias.size(); i++){
-            bias[i] -= learning_rate* 10 * dLdZ[i]; // make learning rate for bias larger because its smaller number smaller condition more likely to convergeto 0
+            // b -= learning_rate *  dL/dZ
+            for(int i=0; i<bias.size(); i++){
+                bias[i] -= learning_rate* 10 * dLdZ[i]; // make learning rate for bias larger because its smaller number smaller condition more likely to convergeto 0
+            }
+
         }
         // print_vector(weights);
         // printArray(bias, 10);
