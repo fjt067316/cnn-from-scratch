@@ -8,6 +8,14 @@ using namespace std;
 
 
 template <typename T>
+void printArray(vector<T> arr) {
+    for(int i=0; i<arr.size(); i++) {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
+
+template <typename T>
 class Tensor {
 public:
     Tensor() : data(0), size(0), rows(0), cols(0), depth(0), dims(0), filter_num(0) {}
@@ -17,6 +25,13 @@ public:
     Tensor(int size1, int size2, int size3, int size4) : data(size1 * size2 * size3 * size4, 0), filter_num(size1), depth(size2), rows(size3), cols(size4), dims(4), size(data.size()) {}
 
     T& operator[](int i) {
+        if (size == 0) {
+            throw out_of_range("Tensor is not a 1D vector");
+        }
+        return data[i];
+    }
+
+    T& operator()(int i) {
         if (size == 0) {
             throw out_of_range("Tensor is not a 1D vector");
         }
@@ -50,7 +65,7 @@ public:
         return;
     }
 
-    // // add item to tensor at given indices
+    // add item to tensor at given indices
     // void operator = (const <t> &Value ) { 
     //      feet = D.feet;
     //      inches = D.inches;
@@ -66,6 +81,7 @@ public:
         if (depth == 0) {
             throw out_of_range("Tensor is not a 3D vector");
         }
+        // cout << val << endl;
         data[i * rows * cols + j * cols + k] = val;
     }
     
@@ -76,13 +92,31 @@ public:
         data[i * (depth * rows * cols) + j * (rows * cols) + k * cols + l] = val;
     }
 
+    // void operator()(int i, int j, int k, const T& val) { // DO NOT DELETE THIS SHIT WORKS LIKE MAGIC FOR ASSIGNMENTS   t(1, 0, 3) = 7;
+    //     if (depth == 0) {
+    //         throw out_of_range("Tensor is not a 3D vector");
+    //     }
+    //     cout << "hit" << endl;
+    //     data[i * rows * cols + j * cols + k] = val;
+    // }
+    
+    // void operator()(int i, int j, int k, int l, const T& val) {
+    //     if (filter_num == 0) {
+    //         throw out_of_range("Tensor is not a 4D vector");
+    //     }
+    //     data[i * (depth * rows * cols) + j * (rows * cols) + k * cols + l] = val;
+    // }
+
+
     void zero() {
         for(int i=0; i < data.size(); i++){
             data[i] = 0;
         }
     }
+    
 
     void print() {
+        printArray(data);
         if (dims == 1) {
             for (int i = 0; i < size; i++) {
                 cout << data[i] << " ";
@@ -147,3 +181,4 @@ int main() {
 }
 
 */
+

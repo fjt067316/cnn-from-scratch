@@ -22,6 +22,7 @@ Tensor<double> last_input;
         assert((input.rows == 0) && (input.cols==0) && (input.depth==0)); // input is 1d
         last_input = input;
         double max = INT32_MIN;
+        // input.print();
 
         for (int i = 0; i < input.size; i++) {
             max = (max > input[i]) ? max : input[i];
@@ -43,7 +44,7 @@ Tensor<double> last_input;
     // https://github.com/AlessandroSaviolo/CNN-from-Scratch/blob/master/src/layer.py
     // https://victorzhou.com/blog/intro-to-cnns-part-2/
         assert((dLdZ.depth == 0) && (dLdZ.rows == 0) && (dLdZ.cols==0)); // assert dLdZ is 1d
-        
+        // dLdZ.print();
         Tensor<double> dLdZ_exp(dLdZ.size);
         Tensor<double> dout_dt(dLdZ.size); // dout_dt is dLdZ next layer
         double sum_exp = 0.0;

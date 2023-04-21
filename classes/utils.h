@@ -42,7 +42,7 @@ void print_vector(const vector<vector<double>>& vec) {
     cout << "\n]\n";
 }
 
-void print_tensor(Tensor<double> t) {
+void print_tensor(Tensor<double> &t) {
     cout << "[";
     for (int i = 0; i < t.depth; i++) {
         cout << "\n  [";

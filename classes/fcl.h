@@ -130,12 +130,11 @@ public:
     Tensor<double> input_matrix;
     // AdamFCL* adam;
     AdamFCL adam;
-    bool dropout;
     bool adam_optimizer;
     double learning_rate;
 
 
-    FullyConnectedLayer(int input_size, int output_size, double learning_rate, bool adam_optimizer, bool dropout) :
+    FullyConnectedLayer(int input_size, int output_size, double learning_rate, bool adam_optimizer) :
         input_size(input_size),
         output_size(output_size),
         weights(output_size, vector<double>(input_size)),
@@ -161,33 +160,14 @@ public:
         this->input_matrix = input_matrix;
         Tensor<double> outputs(output_size);
 
-
-        if(dropout){
-            vector<double> mask(output_size);
-            set_mask(&mask); // 0.4 chance dropout
-            // cout << mask[0] << endl;
-
-            for (int i = 0; i < output_size; i++) {
-                if(mask[i] == 0){
-                    outputs[i] = 0;
-                    continue;
-                }
-                for (int j = 0; j < input_size; j++) {
-                    outputs[i] +=  this->weights[i][j] * input_matrix[j];
-                }
-                outputs[i] += this->bias[i];
+        for (int i = 0; i < output_size; i++) {
+            for (int j = 0; j < input_size; j++) {
+                outputs[i] += this->weights[i][j] * input_matrix[j];
             }
-
-        } else {
-
-            for (int i = 0; i < output_size; i++) {
-                for (int j = 0; j < input_size; j++) {
-                    outputs[i] += this->weights[i][j] * input_matrix[j];
-                }
-                outputs[i] += this->bias[i];
-            }
-
+            outputs[i] += this->bias[i];
         }
+
+    
         relu(&outputs);
         return outputs;
     }

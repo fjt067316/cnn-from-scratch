@@ -333,7 +333,6 @@ public:
         this->filter_len = filter_len;
         this->stride = stride;
         this->padding = padding;
-
         // filters is shape (feature_map_num x input_3d_depth x filter_height x filter_width)
         this->filters.resize(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
         // this->bias.resize(num_filters, vector<vector<double>>(int((input_rows - filter_len) / stride) + 1, vector<double>(int((input_cols - filter_len) / stride) + 1, 0.0)));
@@ -348,7 +347,7 @@ public:
         // Get the input volume dimensions
         input_depth = input3d.depth;
         assert(input_depth > 0);
-
+        // print_vector(filters[0]);
         int input_rows = input3d.rows;
         int input_cols = input3d.cols;
 
@@ -411,7 +410,7 @@ public:
     
     Tensor<double> backwards(Tensor<double> dLdZ) {
         assert(dLdZ.depth > 0);
-                // print_tensor(dLdZ);
+            //  cout << dLdZ[0] << endl;
 
             // dLdZ_lst has 48 8x8 dL/dZ => 24x6x6
             // for each layer in the 48 we calculate the sum of the cube section times the single piece

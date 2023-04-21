@@ -203,7 +203,7 @@ public:
             beta[i] -= learning_rate * dLdB[i];
             gamma[i] -= learning_rate * dLdG[i];
         }
-        
+        // dLdZ.print();
         return dLdZ;
 
     }
