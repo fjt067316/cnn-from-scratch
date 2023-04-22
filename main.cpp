@@ -53,6 +53,7 @@ int main(){
     // kaggle();
     model();
 
+
     // Pool p(2,2);
     // Tensor<double> t(1, 4, 4);
     // // t(1, 1, 1, 1.0);
@@ -226,6 +227,21 @@ int working(){
     }
 
     return 1;
+}
+
+void experiment(){
+    auto start = std::chrono::high_resolution_clock::now();
+    int a = 0;
+    int b = 12;
+    for(int i=0; i<200000; i++){
+        // a -= 0.01*b;
+        // a = fma(0.01, b, a);
+        b--;
+        a++;
+    }
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Elapsed time: " << duration.count() << " microseconds" << std::endl;
 }
 
 // https://www.kaggle.com/code/cdeotte/how-to-choose-cnn-architecture-mnist

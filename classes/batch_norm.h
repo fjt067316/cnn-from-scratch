@@ -152,20 +152,24 @@ public:
             variance[idx] /=  total;
 
             // Compute standard deviation
-            double stddev = sqrt(variance[idx]);
+            double stddev = sqrt(variance[idx] + epsilon);
 
             // Normalize input
             for (int i = 0; i < channel_rows; i++) {
                 for(int j=0; j<channel_cols; j++){
-                    input(idx, i, j)  = (input(idx, i, j)-mean) / (stddev + epsilon);
+                    input(idx, i, j)  = (input(idx, i, j)-mean) / (stddev);
                 }
             }
-
+            // auto start = chrono::high_resolution_clock::now();
             for (int i = 0; i < channel_rows; i++) {
                 for(int j=0; j<channel_cols; j++){
-                    input(idx, i, j)  = gamma[idx]*input(idx, i, j)  + beta[idx];
+                    // input(idx, i, j)  = gamma[idx]*input(idx, i, j)  + beta[idx];
+                    input(idx, i, j) = fma(gamma[idx], input(idx, i, j), beta[idx]);
                 }
             }
+            // auto end = chrono::high_resolution_clock::now();
+            // auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+            // std::cout << "Time taken by function: " << duration << "us\n";
 
         }
 

@@ -478,6 +478,8 @@ public:
                     for(int r=0; r<filter_len; r++){
                         for(int c=0; c<filter_len; c++){
                             filters[filter_num][d][r][c] -= 0.01 * dLdW[filter_num][d][r][c];
+                            // filters[filter_num][d][r][c] = fma(-alpha, dLdW[filter_num][d][r][c], filters[filter_num][d][r][c]);
+
                         }
                     }
                 }
