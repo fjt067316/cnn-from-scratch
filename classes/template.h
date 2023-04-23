@@ -15,6 +15,8 @@ public:
     }
     virtual Tensor<double> forward(Tensor<double> input) = 0;
     virtual Tensor<double> backwards(Tensor<double> input) = 0;
+    virtual void save(FILE *fp) = 0;
+
     virtual int prune() = 0;
 
     const string get_tag (){

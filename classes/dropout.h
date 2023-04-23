@@ -62,4 +62,8 @@ public:
     int prune(){
         return 0;
     }
+
+    void save(FILE* fp){
+        return;
+    }
 };

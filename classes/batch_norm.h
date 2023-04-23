@@ -31,14 +31,6 @@ public:
         this->beta = 0;
         this->epsilon = epsilon;
         this->learning_rate = learning_rate;
-        // random_device rd;
-        // mt19937 gen(rd());
-        // uniform_real_distribution<double> dis(-1.0, 1.0);
-
-        // for (int i = 0; i < input_shape; i++) {
-        //     gamma[i] = dis(gen);
-        //     beta[i] = dis(gen);
-        // }
     }
 
     Tensor<double> forward(Tensor<double> input) { // epsilon helps prevent division by 0
@@ -103,6 +95,10 @@ public:
 
     int prune(){
         return 0;
+    }
+
+    void save(FILE* fp){
+        return;
     }
 };
 
@@ -220,5 +216,9 @@ public:
         // keep an internal counter to only prune this every 3 times the convolution layer is pruned ie every 3 calls to prune actually do it
         // this is because the prune mask is much smaller for this layer so we want to prune it less as its more sensitive to havign a weight zerod out
         return 0;
+    }
+    
+    void save(FILE* fp){
+        return;
     }
 };

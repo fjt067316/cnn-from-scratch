@@ -134,16 +134,23 @@ class Model{
         size++;
     }
 
-    void save(){
+    void save(){ 
+        // 4 bytes tag, 4bytes for each of: nfilters, depth, rows, cols
         char data[5]; // Replace this with your own data
-        string c = "yeet";
-        FILE *outfile = fopen("model.save", "wb+");
+        // int nfilters, depth, rows, cols;
+
+        FILE *outfile = fopen("model.save", "w");
         Layer* layer;
-        
+
         for(int i=0; i < size; i++){
             layer = model[i];
-            strcpy(data, (layer->tag).c_str());
-            fwrite(data, sizeof(char), 4, outfile);
+            layer->save(outfile);
+            // strcpy(data, (layer->tag).c_str()); 
+            // fwrite(data, sizeof(char), 4, outfile); // copy tag of layer to file
+
+            // fwrite(layer->weights, sizeof(double), nfilters*depth*rows*cols, outfile);
+
+            
         }
         fclose(outfile);
     }

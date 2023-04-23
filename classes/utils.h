@@ -146,7 +146,7 @@ public:
     int intput_rows;
     int input_cols;
 
-    Flatten() : Layer("fltn" ) {}
+    Flatten() : Layer("fltn") {}
 
     Tensor<double> forward(Tensor<double> input_3d) {
         input_depth = input_3d.depth;
@@ -188,5 +188,7 @@ public:
         return 0;
     }
 
-    
+    void save(FILE* fp){
+        return;
+    }
 };

@@ -261,8 +261,14 @@ public:
                 count++;
             }
         }
-
-
         return count;
+    }
+
+    void save(FILE* fp){
+        for(int i=0; i<output_size; i++){
+            for(int j=0; j<input_size; j++){
+                fwrite(&weights[i][j], sizeof(double), 1, fp); // copy tag of layer to file
+            }
+        }
     }
 };
