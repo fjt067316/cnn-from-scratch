@@ -56,4 +56,8 @@ public:
         }
         return dLdZ;
     }
+
+    int prune(){
+        return 0;
+    }
 };

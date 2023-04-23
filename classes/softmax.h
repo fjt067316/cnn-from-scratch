@@ -70,4 +70,7 @@ Tensor<double> last_input;
         return dout_dt;
     }
 
+    int prune(){
+        return 0;
+    }
 };

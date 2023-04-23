@@ -181,5 +181,9 @@ public:
         return output;
     }
 
+    int prune(){
+        return 0;
+    }
+
     
 };

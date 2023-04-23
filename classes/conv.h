@@ -4,6 +4,7 @@
 #include <random>
 #include <iostream>
 #include <cassert>
+#include <queue> 
 #include "template.h"
 #include "tensor.h"
 using namespace std;
@@ -314,6 +315,7 @@ public:
     int num_filters;
     bool padding;
     vector<vector<vector<vector<double>>>> filters;
+    vector<vector<vector<vector<bool>>>> prune_mask;
     // Tensor<double>* _input = new Tensor<double>();
     // Tensor<double>* _output = new Tensor<double>();
     Tensor<double> _input;
@@ -335,6 +337,8 @@ public:
         this->padding = padding;
         // filters is shape (feature_map_num x input_3d_depth x filter_height x filter_width)
         this->filters.resize(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
+        this->prune_mask.resize(num_filters, vector<vector<vector<bool>>>(input_depth, vector<vector<bool>>(filter_len, vector<bool>(filter_len, 1))));
+
         // this->bias.resize(num_filters, vector<vector<double>>(int((input_rows - filter_len) / stride) + 1, vector<double>(int((input_cols - filter_len) / stride) + 1, 0.0)));
         this->bias.resize(num_filters, 0.0);
         // vector<vector<vector<vector<double>>>> filters(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, []() { return (double)rand() / RAND_MAX; }))));
@@ -385,7 +389,7 @@ public:
                     for (int d = 0; d < input_depth; d++) {
                         for (int k = 0; k < filter_len; k++) {
                             for (int l = 0; l < filter_len; l++) {
-                                output(filter_idx, i, j) += _input(d, r + k, c + l) * filter[d][k][l];
+                                output(filter_idx, i, j) += _input(d, r + k, c + l) * filter[d][k][l]*prune_mask[filter_idx][d][k][l];
                             }
                         }
                     }
@@ -446,8 +450,8 @@ public:
                     for (int d = 0; d < input_depth; d++) {
                         for (int k = 0; k < filter_len; k++) {
                             for (int l = 0; l < filter_len; l++) {
-                                dLdW[dLdZ_idx][d][k][l] += (_input(d, i + k, j + l) * dLdZ_flat[dldz_pos]); // negative because everything was getting inverted
-                                dLdZ_next(d, i+k, j+l) += filter[d][k][l] * dLdZ_flat[dldz_pos];
+                                dLdW[dLdZ_idx][d][k][l] += (_input(d, i + k, j + l) * dLdZ_flat[dldz_pos])*prune_mask[dLdZ_idx][d][k][l]; // negative because everything was getting inverted
+                                dLdZ_next(d, i+k, j+l) += filter[d][k][l] * dLdZ_flat[dldz_pos]*prune_mask[dLdZ_idx][d][k][l];
                             }
                         }
                     }
@@ -486,10 +490,47 @@ public:
                 bias[filter_num] -= 0.01 * dLdB[filter_num];
             }
         }
-        
-
-
-
         return dLdZ_next;
     }
+
+    int prune(){
+        double threshold = 1e-9;
+        int count = 0;
+        int num_to_prune = num_filters*filter_len*filter_len*input_depth*0.1;
+
+        priority_queue<pair<double, tuple<int, int, int, int>>, vector<pair<double, tuple<int, int, int, int>>>, greater<pair<double, tuple<int, int, int, int>>>> q;
+
+        // print_vector(filters[0]);
+
+        for(int filter_idx=0; filter_idx < num_filters; filter_idx++){
+            for(int d=0; d < input_depth; d++){
+                for(int j=0; j < filter_len; j++){
+                    for(int k=0; k < filter_len; k++){
+                        if( (prune_mask[filter_idx][d][j][k] != 0)){
+                            q.push(make_pair(filters[filter_idx][d][j][k], make_tuple(filter_idx, d, j, k)));
+                        }
+
+                    }
+                }
+            }
+        }
+
+        for(int i=0; i < num_to_prune; i++){
+            pair<double, tuple<int, int, int, int>> top = q.top();
+            double weight = top.first;
+            int filter_idx = get<0>(top.second);
+            int d = get<1>(top.second);
+            int j = get<2>(top.second);
+            int k = get<3>(top.second);
+            q.pop();
+            prune_mask[filter_idx][d][j][k] = 0;
+            // cout << weight << endl;
+            count++;
+        }
+
+
+
+        return count;
+    }
+
 };

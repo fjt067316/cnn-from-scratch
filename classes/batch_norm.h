@@ -99,6 +99,10 @@ public:
 
         return dLdA;
     }
+
+    int prune(){
+        return 0;
+    }
 };
 
 class BatchNorm3D : public Layer { // input and output are same dimensions
@@ -210,5 +214,10 @@ public:
         // dLdZ.print();
         return dLdZ;
 
+    }
+    int prune(){
+        // keep an internal counter to only prune this every 3 times the convolution layer is pruned ie every 3 calls to prune actually do it
+        // this is because the prune mask is much smaller for this layer so we want to prune it less as its more sensitive to havign a weight zerod out
+        return 0;
     }
 };

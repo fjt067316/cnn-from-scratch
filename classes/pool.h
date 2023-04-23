@@ -56,7 +56,7 @@ public:
         return output;
     }
 
-    Tensor<double> backwards(Tensor<double> input3d) {  // 24x6x6 => 24x12x12
+    Tensor<double> backwards(Tensor<double> input3d) {  // upsample
         Tensor<double> output(this->num_filters, this->input_rows, this->input_cols);
 
         for (int filter_idx = 0; filter_idx < this->num_filters; filter_idx++) {
@@ -81,5 +81,9 @@ public:
             }
         }
         return output;
+    }
+
+    int prune(){
+        return 0;
     }
 };

@@ -121,26 +121,31 @@ int kaggle(){
             loss = 0;
             num_correct = 0;
         }
+
     }
 
     return 1;
 }
 
-
+// prune every 5000 iterations then continue to train with pruned model
 int model(){
 
+    int factor = 0;
+    int num_prunes = 4;
+
     Model* model = new Model();
-    model->add_conv_layer(8, 1, 3, 0.001); // 1x28x28 -> 8x24x24s
-    // model->add_conv_layer(8, 8, 5, 0.001); // 1x28x28 -> 8x20x20
-    model->add_batch_norm_3D(8, 0.001);
-    model->add_max_pool(2,2); // 8x24x24 -> 8x12x12
+    model->add_conv_layer(8, 1, 3, 0.0001); // 1x28x28 -> 8x26x26
+    model->add_batch_norm_3D(8, 0.0001);
+    model->add_max_pool(2,2); // 8x26x26 -> 8x13x13
     // model->add_conv_layer(16, 8, 5, 0.0001); // 8x12x12 -> 16x8x8
     // model->add_batch_norm_3D(16, 0.001);
     // model->add_max_pool(2,2); // 16x8x8 -> 16x4x4
     model->add_flatten(); // 
-    model->add_fcl_layer(8*13*13, 10, 0.0005);
-    // model->add_batch_norm_1D(0.001);
-    // model->add_fcl_layer(256, 10, 0.01);
+    model->add_fcl_layer(8*13*13, 128, 0.0001);
+    model->add_batch_norm_1D(0.0001);
+    model->add_fcl_layer(128, 10, 0.0001);
+     model->add_batch_norm_1D(0.0001);
+
     model->add_softmax();
 
     ifstream inputFile("./data/mnist_train.csv");
@@ -151,7 +156,7 @@ int model(){
     string row;
     getline(inputFile, row); // discard first header row
 
-    int iterations = 30000;
+    int iterations = 20000;
 
     int num_correct = 0;
     float loss = 0;
@@ -170,6 +175,12 @@ int model(){
             printf("[Step %d] Past 100 steps: Average Loss %.3f | Accuracy: %d%%\n", n + 1, static_cast<float>(loss) / 100, num_correct);
             loss = 0;
             num_correct = 0;
+        }
+
+        if( (num_prunes > 0) && (n+1) % (3000) == 0){
+            cout << "pruned: " << model->prune() << endl;
+            factor = 1500;
+            num_prunes--;
         }
     }
 

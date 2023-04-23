@@ -63,7 +63,26 @@ class Model{
         // }
 
         return pred_idx == image_label;
+    }
 
+    int prune(){
+        // Maybe after prunning we can removed like 40% of the rows/layers of the model by removing ones with a high enough % of zeros in them
+        // https://www.youtube.com/watch?v=sZzc6tAtTrM&list=PL80kAHvQbh-ocildRaxjjBy6MR1ZsNCU7&index=3
+        // https://towardsdatascience.com/neural-network-pruning-101-af816aaea61 
+        // https://intellabs.github.io/distiller/pruning.html 
+        // if weight < 1e-8 then set it to 0 in the prune mask
+        // pruning slows down training of anything because a memory access is needed for each prune mask index
+        // but pruning can be used to reduce the model weight ie after training with pruning delete all pruning mask index's with a value of zero
+        Layer* layer;
+        int total_pruned = 0;
+
+        for (int i = 0; i < size; ++i) {
+            layer = model[i];
+            total_pruned += layer->prune();
+            // cout << total_pruned << endl;
+        }
+
+        return total_pruned;
     }
 
     void add_conv_layer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, bool use_adam=0, int stride = 1, bool padding=0){
@@ -112,5 +131,9 @@ class Model{
         Softmax* softmax = new Softmax();
         model.push_back(softmax);
         size++;
+    }
+
+    void save(){
+        
     }
 };
