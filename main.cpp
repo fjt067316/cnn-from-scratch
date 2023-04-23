@@ -51,8 +51,12 @@ vector<double> decodeCsvString(string csv){
 int main(){
     // working();
     // kaggle();
-    model();
-
+    // model();
+    Model* model = new Model();
+    model->add_conv_layer(8, 1, 5, 0.001); // 1x28x28 -> 8x24x24
+    model->add_fcl_layer(28*28*8, 256);
+    model->save();
+    model->load();
 
     // Pool p(2,2);
     // Tensor<double> t(1, 4, 4);

@@ -12,9 +12,11 @@ using namespace std;
 
 class Softmax : public Layer {
 public:
-Tensor<double> last_input;
+    Tensor<double> last_input;
+    // string tag = "smax";
 
-    Softmax(){
+
+    Softmax() : Layer("smax") {
         return;
     }
 

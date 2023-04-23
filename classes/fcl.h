@@ -124,6 +124,7 @@ public:
 
 class FullyConnectedLayer : public Layer {
 public:
+    // const string tag{"fcl"};
     int input_size;
     int output_size;
     vector<vector<double>> weights; // matrix of shape (output_size, input_size)
@@ -143,7 +144,8 @@ public:
         prune_mask(output_size, vector<bool>(input_size, 1)),
         weights(output_size, vector<double>(input_size)),
         bias(output_size, 0.0),
-        adam(output_size, input_size, learning_rate)
+        adam(output_size, input_size, learning_rate),
+        Layer("fcl")
     {
         this->input_size = input_size;
         this->output_size = output_size;

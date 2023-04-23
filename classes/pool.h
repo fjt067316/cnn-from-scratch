@@ -10,13 +10,14 @@ using namespace std;
 
 class Pool : public Layer {
 public:
+    // string tag = "pool";
     int pool_size;
     int stride;
     int input_rows = -1;
     int input_cols = -1;
     int num_filters = -1;
     
-    Pool(int pool_size_, int stride_) {
+    Pool(int pool_size_, int stride_) : Layer("pool") {
         pool_size = pool_size_;
         stride = stride_;
     }

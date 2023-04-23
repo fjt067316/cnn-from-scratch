@@ -329,7 +329,8 @@ public:
     vector<double> bias; // dB is calcaulted by averaging dLdZ
 
     ConvolutionLayer(int num_filters, int input_depth, int filter_len, double learning_rate, bool adam_optimizer, int stride, bool padding) :
-            adam(num_filters, input_depth, filter_len, learning_rate)
+            adam(num_filters, input_depth, filter_len, learning_rate),
+            Layer("conv")
      {
         this->num_filters = num_filters;
         this->filter_len = filter_len;

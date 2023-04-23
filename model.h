@@ -88,6 +88,7 @@ class Model{
     void add_conv_layer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, bool use_adam=0, int stride = 1, bool padding=0){
         ConvolutionLayer * conv = new ConvolutionLayer(num_filters, input_depth, filter_len, learning_rate, use_adam, stride, padding);
         model.push_back(conv);
+        cout << conv << endl;
         size++;
     }
 
@@ -134,6 +135,28 @@ class Model{
     }
 
     void save(){
+        char data[5]; // Replace this with your own data
+        string c = "yeet";
+        FILE *outfile = fopen("model.save", "wb+");
+        Layer* layer;
         
+        for(int i=0; i < size; i++){
+            layer = model[i];
+            strcpy(data, (layer->tag).c_str());
+            fwrite(data, sizeof(char), 4, outfile);
+        }
+        fclose(outfile);
+    }
+
+    void load(){
+        char data[5]; // Replace this with your own data
+        FILE *infile = fopen("model.save", "rb");
+        Layer* layer;
+        for(int i=0; i < size; i++){
+            layer = model[i];
+            strcpy(data, (layer->tag).c_str());
+            fread(data, sizeof(char), 4, infile);
+        }
+        fclose(infile);
     }
 };
