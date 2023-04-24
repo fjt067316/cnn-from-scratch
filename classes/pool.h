@@ -10,13 +10,14 @@ using namespace std;
 
 class Pool : public Layer {
 public:
+    // string tag = "pool";
     int pool_size;
     int stride;
     int input_rows = -1;
     int input_cols = -1;
     int num_filters = -1;
     
-    Pool(int pool_size_, int stride_) {
+    Pool(int pool_size_, int stride_) : Layer("pool") {
         pool_size = pool_size_;
         stride = stride_;
     }
@@ -56,7 +57,7 @@ public:
         return output;
     }
 
-    Tensor<double> backwards(Tensor<double> input3d) {  // 24x6x6 => 24x12x12
+    Tensor<double> backwards(Tensor<double> input3d) {  // upsample
         Tensor<double> output(this->num_filters, this->input_rows, this->input_cols);
 
         for (int filter_idx = 0; filter_idx < this->num_filters; filter_idx++) {
@@ -81,5 +82,13 @@ public:
             }
         }
         return output;
+    }
+
+    int prune(){
+        return 0;
+    }
+
+    void save(FILE* fp){
+        return;
     }
 };

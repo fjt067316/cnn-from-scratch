@@ -141,9 +141,12 @@ pair<int, double> get_pred(Tensor<double> outputs) {
 
 class Flatten : public Layer { // assumes we always flatten down on forward pass and reshape on backpass
 public:
+    // string tag = "fltn";
     int input_depth;
     int intput_rows;
     int input_cols;
+
+    Flatten() : Layer("fltn") {}
 
     Tensor<double> forward(Tensor<double> input_3d) {
         input_depth = input_3d.depth;
@@ -181,5 +184,11 @@ public:
         return output;
     }
 
-    
+    int prune(){
+        return 0;
+    }
+
+    void save(FILE* fp){
+        return;
+    }
 };

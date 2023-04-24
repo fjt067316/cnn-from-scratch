@@ -11,6 +11,7 @@ using namespace std;
 
 class Dropout : public Layer { // input and output are same dimensions
 public:
+    // string tag = "drop";
     double p;
     binomial_distribution<double> dis;
     random_device rd;
@@ -20,7 +21,8 @@ public:
     Dropout(float probability_zero, bool on_backprop) : 
         p(probability_zero),
         gen(rd()),
-        dis(0, p) // https://cplusplus.com/reference/random/binomial_distribution/binomial_distribution/
+        dis(0, p), // https://cplusplus.com/reference/random/binomial_distribution/binomial_distribution/
+        Layer("drop")
     {}
     
     Tensor<double> forward(Tensor<double> input) { // highest input dimension is 3
@@ -55,5 +57,13 @@ public:
             }
         }
         return dLdZ;
+    }
+
+    int prune(){
+        return 0;
+    }
+
+    void save(FILE* fp){
+        return;
     }
 };

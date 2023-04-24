@@ -4,6 +4,7 @@
 #include <random>
 #include <iostream>
 #include <cassert>
+#include <queue> 
 #include "template.h"
 #include "tensor.h"
 using namespace std;
@@ -147,163 +148,6 @@ public:
 };
 
 
-// class ConvolutionLayerDepthwise
-// // https://towardsdatascience.com/gentle-dive-into-math-behind-convolutional-neural-networks-79a07dd44cf9
-// // https://eli.thegreenplace.net/2018/depthwise-separable-convolutions-for-machine-learning/ 
-// {
-// public:
-//     int filter_len;
-//     int stride;
-//     int num_filters;
-//     bool padding;
-//     vector<vector<vector<double>>> filters;
-//     vector<vector<vector<double>>> _input;
-//     vector<vector<vector<double>>> _output;
-//     int intput_depth;
-
-
-//     ConvolutionLayerDepthwise(int num_filters, int filter_len, int stride = 1, bool padding=0) {
-//         this->num_filters = num_filters; // num_filters == input_depth
-//         this->filter_len = filter_len;
-//         this->stride = stride;
-//         this->padding = padding;
-        
-//         // filters is shape (feature_map_num x input_3d_depth x filter_height x filter_width)
-//         this->filters.resize(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
-//         // vector<vector<vector<vector<double>>>> filters(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, []() { return (double)rand() / RAND_MAX; }))));
-//         fill_with_random(&(this->filters));
-//     }
-
-//     vector<vector<vector<double>>> forward(vector<vector<vector<double>>> input3d) {
-//         //https://stackoverflow.com/questions/59887786/algorithim-of-how-conv2d-is-implemented-in-pytorch 
-//         // Get the input volume dimensions
-
-//         _input = input3d;
-//         input_depth = input3d.size();
-
-//         int input_rows = input3d[0].size();
-//         int input_cols = input3d[0][0].size();
-
-//         if(padding){
-//             int padding_num = (filter_len - 1);
-//             input_rows = input3d[0].size() + padding_num;
-//             input_cols = input3d[0][0].size() + padding_num;
-            
-//             vector<vector<vector<double>>> padded_input(input_depth, vector<vector<double>>(input_rows , vector<double>(input_cols, 0.0)));
-//             int start_idx = int(padding_num/2);
-            
-//             // try to pad evenly left and right ie 1 zero on left 2 on right 1 on top 2 on bottom
-//             for (int d = 0; d < input_depth; d++) {
-//                 for (int i = 0; i < input3d[0].size(); i++) {
-//                     for (int j = 0; j < input3d[0][0].size() ; j++) {
-//                         padded_input[d][i+start_idx][j+start_idx] = input3d[d][i][j];
-//                     }
-//                 }
-//             }
-//             _input = padded_input;
-//         }
-
-//         int output_rows = int((input_rows - filter_len) / stride) + 1;
-//         int output_cols = int((input_cols - filter_len) / stride) + 1;
-
-//         vector<vector<vector<double>>> output(num_filters, vector<vector<double>>(output_rows, vector<double>(output_cols, 0)));
-
-//         for (int filter_idx = 0; filter_idx < filters.size(); filter_idx++){
-//             auto filter = filters[filter_idx];
-//             for (int i = 0; i < output_rows; i++){
-//                 for (int j = 0; j < output_cols; j++){
-//                     int r = i * stride;
-//                     int c = j * stride;
-//                     for (int k = 0; k < filter_len; k++) {
-//                         for (int l = 0; l < filter_len; l++) {
-//                             output[filter_idx][i][j] += _input[filter_idx][r + k][c + l] * filter[k][l];
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
-//         for (int filter_idx = 0; filter_idx < filters.size(); filter_idx++){
-//             auto filter = filters[filter_idx];
-//             for (int i = 0; i < output_rows; i++){
-//                 for (int j = 0; j < output_cols; j++){
-//                     int r = i * stride;
-//                     int c = j * stride;
-//                     for (int d = 0; d < input_depth; d++) {
-//                         for (int k = 0; k < filter_len; k++) {
-//                             for (int l = 0; l < filter_len; l++) {
-//                                 output[filter_idx][i][j] += _input[d][r + k][c + l] * filter[d][k][l];
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
-//         relu(&output);
-//         _output = output;
-//         return output;
-//     }
-    
-//     vector<vector<vector<double>>> backwards(vector<vector<vector<double>>> dLdZ, double learning_rate) {
-//             // dLdZ_lst has 48 8x8 dL/dZ => 24x6x6
-//             // for each layer in the 48 we calculate the sum of the cube section times the single piece
-//             // dLdZ is the same size as the output
-
-//             vector<vector<vector<double>>> dLdZ_next(_input.size(), vector<vector<double>>(_input[0].size()-padding*(filter_len-1), vector<double>(_input[0][0].size()-padding*(filter_len-1))));
-//             vector<vector<vector<vector<double>>>> dLdW(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
-
-//             for (int dLdZ_idx = 0; dLdZ_idx < dLdZ.size(); dLdZ_idx++) {
-//                 // flatten and apply relu
-//                 vector<double> dLdZ_flat;
-//                 for (int i = 0; i < dLdZ[dLdZ_idx].size(); i++) {
-//                     for (int j = 0; j < dLdZ[dLdZ_idx][i].size(); j++) {
-//                         dLdZ_flat.push_back(max(dLdZ[dLdZ_idx][i][j],0.0)); // leakky relu
-//                         // dLdZ_flat.push_back(max(dLdZ[dLdZ_idx][i][j],0.0)); // relu
-//                         // dLdZ_flat.push_back(dLdZ[dLdZ_idx][i][j]); // no relu
-//                     }
-//                 }
-//                 // 1 layer of dLdZ multiplied with 3d shapes to make 11 filter
-//                 // every value in the 3d filter v will be updated such that
-//                 // v = dLdZ11*a1 + dLdZ12*a3 ...
-//                 vector<vector<vector<double>>> filter = filters[dLdZ_idx];
-//                 int input_depth = _input.size();
-//                 int input_rows = _input[0].size()+padding*(filter_len-1);
-//                 int input_cols = _input[0][0].size()+padding*(filter_len-1);
-//                 int filter_len = this->filter_len;
-//                 int output_rows = int((input_rows - this->filter_len) / stride) + 1;
-//                 int output_cols = int((input_cols - this->filter_len) / stride) + 1;
-//                 int dldz_pos = 0;
-//                 for (int i = 0; i < input_rows - filter_len + 1; i += stride) {
-//                     for (int j = 0; j < input_cols - filter_len + 1; j += stride) {
-//                         // Ssum overlap
-//                         for (int d = 0; d < input_depth; d++) {
-//                             for (int k = 0; k < filter_len; k++) {
-//                                 for (int l = 0; l < filter_len; l++) {
-//                                     dLdW[dLdZ_idx][d][k][l] += (_input[d][i + k][j + l] * dLdZ_flat[dldz_pos]); // negative because everything was getting inverted
-//                                     dLdZ_next[d][i+k][j+l] += filter[d][k][l] * dLdZ_flat[dldz_pos];
-//                                 }
-//                             }
-//                         }
-//                         dldz_pos++;
-//                     }
-//                 }
-//             }
-//             // Apply dLdW to feature maps
-//         for(int filter_num=0; filter_num < num_filters; filter_num++){
-//             for(int d=0; d < _input.size(); d++){
-//                 for(int r=0; r<filter_len; r++){
-//                     for(int c=0; c<filter_len; c++){
-//                         filters[filter_num][d][r][c] -= learning_rate * dLdW[filter_num][d][r][c];
-//                     }
-//                 }
-//             }
-//         }
-//         return dLdZ_next;
-//     }
-// };
-
-
 class ConvolutionLayer : public Layer
 // https://towardsdatascience.com/gentle-dive-into-math-behind-convolutional-neural-networks-79a07dd44cf9
 // https://eli.thegreenplace.net/2018/depthwise-separable-convolutions-for-machine-learning/ 
@@ -314,6 +158,7 @@ public:
     int num_filters;
     bool padding;
     vector<vector<vector<vector<double>>>> filters;
+    vector<vector<vector<vector<bool>>>> prune_mask;
     // Tensor<double>* _input = new Tensor<double>();
     // Tensor<double>* _output = new Tensor<double>();
     Tensor<double> _input;
@@ -327,7 +172,8 @@ public:
     vector<double> bias; // dB is calcaulted by averaging dLdZ
 
     ConvolutionLayer(int num_filters, int input_depth, int filter_len, double learning_rate, bool adam_optimizer, int stride, bool padding) :
-            adam(num_filters, input_depth, filter_len, learning_rate)
+            adam(num_filters, input_depth, filter_len, learning_rate),
+            Layer("conv")
      {
         this->num_filters = num_filters;
         this->filter_len = filter_len;
@@ -335,6 +181,8 @@ public:
         this->padding = padding;
         // filters is shape (feature_map_num x input_3d_depth x filter_height x filter_width)
         this->filters.resize(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, 0.0))));
+        this->prune_mask.resize(num_filters, vector<vector<vector<bool>>>(input_depth, vector<vector<bool>>(filter_len, vector<bool>(filter_len, 1))));
+
         // this->bias.resize(num_filters, vector<vector<double>>(int((input_rows - filter_len) / stride) + 1, vector<double>(int((input_cols - filter_len) / stride) + 1, 0.0)));
         this->bias.resize(num_filters, 0.0);
         // vector<vector<vector<vector<double>>>> filters(num_filters, vector<vector<vector<double>>>(input_depth, vector<vector<double>>(filter_len, vector<double>(filter_len, []() { return (double)rand() / RAND_MAX; }))));
@@ -385,7 +233,7 @@ public:
                     for (int d = 0; d < input_depth; d++) {
                         for (int k = 0; k < filter_len; k++) {
                             for (int l = 0; l < filter_len; l++) {
-                                output(filter_idx, i, j) += _input(d, r + k, c + l) * filter[d][k][l];
+                                output(filter_idx, i, j) += _input(d, r + k, c + l) * filter[d][k][l]*prune_mask[filter_idx][d][k][l];
                             }
                         }
                     }
@@ -446,8 +294,8 @@ public:
                     for (int d = 0; d < input_depth; d++) {
                         for (int k = 0; k < filter_len; k++) {
                             for (int l = 0; l < filter_len; l++) {
-                                dLdW[dLdZ_idx][d][k][l] += (_input(d, i + k, j + l) * dLdZ_flat[dldz_pos]); // negative because everything was getting inverted
-                                dLdZ_next(d, i+k, j+l) += filter[d][k][l] * dLdZ_flat[dldz_pos];
+                                dLdW[dLdZ_idx][d][k][l] += (_input(d, i + k, j + l) * dLdZ_flat[dldz_pos])*prune_mask[dLdZ_idx][d][k][l]; // negative because everything was getting inverted
+                                dLdZ_next(d, i+k, j+l) += filter[d][k][l] * dLdZ_flat[dldz_pos]*prune_mask[dLdZ_idx][d][k][l];
                             }
                         }
                     }
@@ -486,10 +334,65 @@ public:
                 bias[filter_num] -= 0.01 * dLdB[filter_num];
             }
         }
-        
-
-
-
         return dLdZ_next;
     }
+
+    int prune(){
+        double threshold = 1e-9;
+        int count = 0;
+        int num_to_prune = num_filters*filter_len*filter_len*input_depth*0.1;
+
+        priority_queue<pair<double, tuple<int, int, int, int>>, vector<pair<double, tuple<int, int, int, int>>>, greater<pair<double, tuple<int, int, int, int>>>> q;
+
+        // print_vector(filters[0]);
+
+        for(int filter_idx=0; filter_idx < num_filters; filter_idx++){
+            for(int d=0; d < input_depth; d++){
+                for(int j=0; j < filter_len; j++){
+                    for(int k=0; k < filter_len; k++){
+                        if( (prune_mask[filter_idx][d][j][k] != 0)){
+                            q.push(make_pair(filters[filter_idx][d][j][k], make_tuple(filter_idx, d, j, k)));
+                        }
+
+                    }
+                }
+            }
+        }
+
+        for(int i=0; i < num_to_prune; i++){
+            pair<double, tuple<int, int, int, int>> top = q.top();
+            double weight = top.first;
+            int filter_idx = get<0>(top.second);
+            int d = get<1>(top.second);
+            int j = get<2>(top.second);
+            int k = get<3>(top.second);
+            q.pop();
+            prune_mask[filter_idx][d][j][k] = 0;
+            // cout << weight << endl;
+            count++;
+        }
+
+
+
+        return count;
+    }
+
+    void save(FILE *fp){
+        fwrite(tag.c_str(), sizeof(char), tag.size(), fp); //write the tag
+        fwrite(&num_filters, sizeof(int), 1, fp);
+        fwrite(&input_depth, sizeof(int), 1, fp);
+        fwrite(&filter_len, sizeof(int), 1, fp);
+
+
+        for(int f=0;f<num_filters;f++){
+            for(int d=0; d<input_depth; d++){
+                for(int j=0; j<filter_len; j++){
+                    for(int k=0; k< filter_len; k++){
+                        fwrite(&(filters[f][d][j][k]), sizeof(double), 1, fp);                    
+                    }
+                }
+            }
+        }
+    }
+
 };

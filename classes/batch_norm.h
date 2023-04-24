@@ -17,6 +17,7 @@ Batch norm scales data to a mean of 0 and standard deviation of 1 ie standard ga
 class BatchNorm1D : public Layer { // input and output are same dimensions
 // https://www.analyticsvidhya.com/blog/2021/03/introduction-to-batch-normalization/ 
 public:
+    // string tag = "bn1d";
     double gamma;
     double beta;
     Tensor<double> inputs;
@@ -24,20 +25,12 @@ public:
     double variance;
     double learning_rate;
 
-    BatchNorm1D( double learning_rate, double epsilon = 1e-5){
+    BatchNorm1D( double learning_rate, double epsilon = 1e-5) : Layer("bn1d"){
         // Initialize gamma and beta as 1 and 0 to start
         this->gamma = 1;
         this->beta = 0;
         this->epsilon = epsilon;
         this->learning_rate = learning_rate;
-        // random_device rd;
-        // mt19937 gen(rd());
-        // uniform_real_distribution<double> dis(-1.0, 1.0);
-
-        // for (int i = 0; i < input_shape; i++) {
-        //     gamma[i] = dis(gen);
-        //     beta[i] = dis(gen);
-        // }
     }
 
     Tensor<double> forward(Tensor<double> input) { // epsilon helps prevent division by 0
@@ -99,6 +92,14 @@ public:
 
         return dLdA;
     }
+
+    int prune(){
+        return 0;
+    }
+
+    void save(FILE* fp){
+        return;
+    }
 };
 
 class BatchNorm3D : public Layer { // input and output are same dimensions
@@ -111,7 +112,7 @@ public:
     int num_channels;
     double learning_rate;
 
-    BatchNorm3D(int num_channels, double learning_rate, double epsilon = 1e-5){
+    BatchNorm3D(int num_channels, double learning_rate, double epsilon = 1e-5) : Layer("bn3d") {
         // 1 gamma and 1 beta per channel
         // Initialize gamma and beta as 1 and 0 to start
         this->gamma = vector<double>(num_channels, 1);
@@ -210,5 +211,14 @@ public:
         // dLdZ.print();
         return dLdZ;
 
+    }
+    int prune(){
+        // keep an internal counter to only prune this every 3 times the convolution layer is pruned ie every 3 calls to prune actually do it
+        // this is because the prune mask is much smaller for this layer so we want to prune it less as its more sensitive to havign a weight zerod out
+        return 0;
+    }
+    
+    void save(FILE* fp){
+        return;
     }
 };

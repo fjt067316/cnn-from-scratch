@@ -4,6 +4,7 @@
 #include <random>
 #include <iostream>
 #include <cassert>
+#include <queue> 
 #include "template.h"
 using namespace std;
 
@@ -123,9 +124,12 @@ public:
 
 class FullyConnectedLayer : public Layer {
 public:
+    // const string tag{"fcl"};
     int input_size;
     int output_size;
     vector<vector<double>> weights; // matrix of shape (output_size, input_size)
+    vector<vector<bool>> prune_mask; // matrix of shape (output_size, input_size)
+
     vector<double> bias; // vector of shape (output_size)
     Tensor<double> input_matrix;
     // AdamFCL* adam;
@@ -137,9 +141,11 @@ public:
     FullyConnectedLayer(int input_size, int output_size, double learning_rate, bool adam_optimizer) :
         input_size(input_size),
         output_size(output_size),
+        prune_mask(output_size, vector<bool>(input_size, 1)),
         weights(output_size, vector<double>(input_size)),
         bias(output_size, 0.0),
-        adam(output_size, input_size, learning_rate)
+        adam(output_size, input_size, learning_rate),
+        Layer("fcl")
     {
         this->input_size = input_size;
         this->output_size = output_size;
@@ -162,7 +168,7 @@ public:
 
         for (int i = 0; i < output_size; i++) {
             for (int j = 0; j < input_size; j++) {
-                outputs[i] += this->weights[i][j] * input_matrix[j];
+                outputs[i] += this->weights[i][j] * input_matrix[j] * prune_mask[i][j];
             }
             outputs[i] += this->bias[i];
         }
@@ -184,7 +190,7 @@ public:
 
         for(int c=0; c < input_size; c++){
             for(int r=0; r < dLdZ.size; r++){
-                next_dLdZ[c] += weights[r][c]*dLdZ[r];
+                next_dLdZ[c] += weights[r][c]*dLdZ[r]*prune_mask[r][c];
             }
         }
         // calculate dLdW to update weights
@@ -217,5 +223,52 @@ public:
         // print_vector(weights);
         // printArray(bias, 10);
         return next_dLdZ;
+    }
+
+    int prune(){   
+        int threshold_prune = 1;
+        double threshold = 1e-9;
+        float p = 0.15; // percentage of weights to prune
+        int prune_count = int(input_size*output_size*p);
+        int count = 0;
+
+        // priority_queue<int,vector<int>,greater<int> > q;
+        priority_queue<pair<double, pair<int, int>>, vector<pair<double, pair<int, int>>>, greater<pair<double, pair<int, int>>>> q;
+        // print_vector(weights);
+        if(threshold_prune){
+            for(int i=0; i < weights.size(); i++){
+                for(int j=0; j < weights[0].size(); j++){
+                    // if(abs(weights[i][j]) < threshold){
+                    //     prune_mask[i][j] = 0;
+                    //     count++;
+                    // }
+                    // q.push(weights[i][j]);
+                    if(prune_mask[i][j] != 0){
+                        q.push(make_pair(weights[i][j], make_pair(i, j)));
+                    }
+                    
+
+                }
+            }
+            for(int i=0; i < prune_count; i++){
+                pair<double, pair<int, int>> top = q.top();
+                double weight = top.first;
+                int i_index = top.second.first;
+                int j_index = top.second.second;
+                q.pop();
+                prune_mask[i_index][j_index] = 0;
+                // cout << weight << endl;
+                count++;
+            }
+        }
+        return count;
+    }
+
+    void save(FILE* fp){
+        for(int i=0; i<output_size; i++){
+            for(int j=0; j<input_size; j++){
+                fwrite(&weights[i][j], sizeof(double), 1, fp); // copy tag of layer to file
+            }
+        }
     }
 };
