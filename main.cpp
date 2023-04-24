@@ -15,12 +15,13 @@
 #include "classes/batch_norm.h"
 #include "classes/activation_functions.h"
 #include "classes/tensor.h"
+#include "transformer.h"
 #include "model.h"
 using namespace std;
 
 int working();
 int kaggle();
-int custom();
+int transformer();
 int model();
 
 
@@ -51,7 +52,8 @@ vector<double> decodeCsvString(string csv){
 int main(){
     // working();
     // kaggle();
-    model();
+    // model();
+    transformer();
 
     // Testing save and load 
 
@@ -250,3 +252,36 @@ void experiment(){
 }
 
 // https://www.kaggle.com/code/cdeotte/how-to-choose-cnn-architecture-mnist
+
+// #include <unordered_map>
+
+int transformer() {
+    // Load the glove6b.txt file into a hash table
+    unordered_map<string, vector<double>> hash_table = load_embedding_map("data/glove.6B/glove.6B.50d.txt"); 
+
+    // Test the hash table
+    string word = "hello";
+    if (hash_table.find(word) != hash_table.end()) {
+        vector<double> vec = hash_table[word];
+        cout << "Vector for word " << word << ": [ ";
+        for (double value : vec) {
+            cout << value << " ";
+        }
+        cout << "]" << endl;
+    } else {
+        cout << "Word " << word << " not found in hash table." << endl;
+    }
+    string word2 = "penis";
+    if (hash_table.find(word2) != hash_table.end()) {
+        vector<double> vec = hash_table[word2];
+        cout << "Vector for word " << word2 << ": [ ";
+        for (double value : vec) {
+            cout << value << " ";
+        }
+        cout << "]" << endl;
+    } else {
+        cout << "Word " << word2 << " not found in hash table." << endl;
+    }
+
+    return 0;
+}
