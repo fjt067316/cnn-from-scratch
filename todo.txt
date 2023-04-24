@@ -15,3 +15,15 @@ https://www.youtube.com/watch?v=sZzc6tAtTrM - 40 min in
 
 use gamma from batch norm to determin which filters/output channels to prune 
 ie prune the lowest gamma value channel every n iterations
+
+## save load
+
+## model->scale_learning_rate(0.95); function to drop learning rate as we train
+
+## quantization
+
+## residual layers
+
+https://medium.com/analytics-vidhya/understanding-and-implementation-of-residual-networks-resnets-b80f9a507b9c 
+
+

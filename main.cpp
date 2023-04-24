@@ -51,25 +51,15 @@ vector<double> decodeCsvString(string csv){
 int main(){
     // working();
     // kaggle();
-    // model();
-    Model* model = new Model();
-    model->add_conv_layer(8, 1, 5, 0.001); // 1x28x28 -> 8x24x24
-    model->add_fcl_layer(28*28*8, 256);
-    model->save();
-    model->load();
+    model();
 
-    // Pool p(2,2);
-    // Tensor<double> t(1, 4, 4);
-    // // t(1, 1, 1, 1.0);
-    // // t(1, 3, 3, 5.0);
-    // t(1, 0, 3) = 7;
-    // cout << t(1,1,1);
-    // print_tensor(t);
-    // t.print();
-    // t(1, 0, 3) = 7;
-    // t = p.forward(t);
-    // t.print();
-    
+    // Testing save and load 
+
+    // Model* model = new Model();
+    // model->add_conv_layer(8, 1, 5, 0.001); // 1x28x28 -> 8x24x24
+    // model->add_fcl_layer(28*28*8, 256);
+    // model->save();
+    // model->load();
 
     return 1;
 }
@@ -145,7 +135,7 @@ int model(){
     // model->add_batch_norm_3D(16, 0.001);
     // model->add_max_pool(2,2); // 16x8x8 -> 16x4x4
     model->add_flatten(); // 
-    model->add_fcl_layer(8*13*13, 128, 0.0001);
+    model->add_fcl_layer(8*13*13, 128, 0.0005);
     model->add_batch_norm_1D(0.0001);
     model->add_fcl_layer(128, 10, 0.0001);
      model->add_batch_norm_1D(0.0001);

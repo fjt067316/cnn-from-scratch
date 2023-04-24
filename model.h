@@ -88,7 +88,7 @@ class Model{
     void add_conv_layer(int num_filters, int input_depth, int filter_len, double learning_rate=0.001, bool use_adam=0, int stride = 1, bool padding=0){
         ConvolutionLayer * conv = new ConvolutionLayer(num_filters, input_depth, filter_len, learning_rate, use_adam, stride, padding);
         model.push_back(conv);
-        cout << conv << endl;
+        // cout << conv << endl;
         size++;
     }
 
