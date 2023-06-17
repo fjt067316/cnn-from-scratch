@@ -1,1 +1,0 @@
-x coming out of soft max is nan its not the loss calculation

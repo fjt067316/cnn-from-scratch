@@ -1,3 +1,5 @@
 *.o
 *.csv
 .vscode
+
+*.txt
