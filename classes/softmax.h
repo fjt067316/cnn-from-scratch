@@ -55,7 +55,7 @@ public:
         for(int i=0; i < last_input.size; i++){
             dLdZ_exp[i] = exp(last_input[i]); 
             sum_exp += dLdZ_exp[i];       
-            if(dLdZ[i] < 0){ // it will be negative
+            if(dLdZ[i] < 0){ // position with answer will be negative
                 label_idx = i;
             }
         }
