@@ -1,8 +1,6 @@
 # CNN From Scratch
 
-This is a cnn written in c++.
-
-Want to know how it works?
+This is a cnn written in c++ single threaded cpu
 
 ## Data
 
